@@ -129,6 +129,18 @@
         text-overflow: ellipsis;
       }
       .listeners { color: var(--text3); font-size: 0.8rem; margin-bottom: 12px; }
+      .open-external {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.85rem;
+        color: var(--accent2);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 999px;
+        text-decoration: none;
+        transition: 0.15s;
+      }
+      .open-external:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .error { color: var(--red); }
@@ -205,6 +217,15 @@
         audio.preload = "none";
         audio.src = "/stream/" + encodeURIComponent(dj.id);
         info.appendChild(audio);
+
+        const ext = document.createElement("a");
+        ext.className = "open-external";
+        ext.textContent = "Open in local app (VLC)";
+        // Direct HQ m3u on the Icecast host — local players handle it natively,
+        // and it avoids proxying the stream through this site (saves bandwidth).
+        ext.href = "https://live.streambox.space/" + encodeURIComponent(dj.id) + "_hq.m3u";
+        ext.target = "_blank";
+        info.appendChild(ext);
 
         card.appendChild(img);
         card.appendChild(fallback);
