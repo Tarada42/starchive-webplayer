@@ -203,7 +203,7 @@
         const audio = document.createElement("audio");
         audio.controls = true;
         audio.preload = "none";
-        audio.src = dj.liveUrl;
+        audio.src = "/stream/" + encodeURIComponent(dj.id);
         info.appendChild(audio);
 
         card.appendChild(img);
