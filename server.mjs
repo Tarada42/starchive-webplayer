@@ -41,6 +41,20 @@ app.get("/live", (_req, res) => res.sendFile(path.join(__dirname, "live.html")))
 // ~30-40s, especially with interleaved icy-metadata). Piping through Express makes it
 // a clean, infinite audio/mpeg stream the browser plays indefinitely. Traffic rides
 // the site's own bandwidth (user has 8 TB/mo headroom).
+// Serve a one-line m3u with the proper media content-type so the OS opens it in
+// the user's local media player (e.g. VLC) instead of a download prompt. Points at
+// the direct HQ stream on the Icecast host so playback does NOT ride this proxy.
+app.get("/stream/:dj.m3u", (req, res) => {
+  const dj = String(req.params.dj || "").replace(/[^A-Za-z0-9_]/g, "");
+  if (!dj) return res.status(400).send("missing dj");
+  const href = `https://live.streambox.space/${dj}_hq`;
+  res.status(200);
+  res.setHeader("Content-Type", "audio/x-mpegurl");
+  res.setHeader("Content-Disposition", "inline");
+  res.setHeader("Cache-Control", "no-cache");
+  res.end(href + "\n");
+});
+
 app.get("/stream/:dj", async (req, res) => {
   const dj = String(req.params.dj || "").replace(/[^A-Za-z0-9_]/g, "");
   if (!dj) return res.status(400).send("missing dj");

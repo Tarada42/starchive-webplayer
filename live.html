@@ -221,9 +221,11 @@
         const ext = document.createElement("a");
         ext.className = "open-external";
         ext.textContent = "Open in local app (we recommend VLC)";
-        // Direct HQ m3u on the Icecast host — local players handle it natively,
-        // and it avoids proxying the stream through this site (saves bandwidth).
-        ext.href = "https://live.streambox.space/" + encodeURIComponent(dj.id) + "_hq.m3u";
+        // We serve the m3u (with audio/x-mpegurl content-type) so the OS opens it in
+        // the user's local player (e.g. VLC) instead of a download prompt. The m3u
+        // itself points at the DIRECT HQ stream on the Icecast host, so playback does
+        // NOT ride this proxy (saves bandwidth).
+        ext.href = "/stream/" + encodeURIComponent(dj.id) + ".m3u";
         ext.target = "_blank";
         info.appendChild(ext);
 
