@@ -1,5 +1,1 @@
-{
-  "dependencies": {
-    "vercel": "^65.5.0"
-  }
-}
+{"type":"module","name":"webapp-copy","version":"1.5.0","dependencies":{"express":"^4.22.3"}}

@@ -4,8 +4,8 @@
 // VPS cron job) — instant, no per-request scraping. If avatars.json is missing, falls
 // back to live scraping of streambox + Twitch (decapi.me) so the endpoint still works.
 // Shaped like the original API: { "<id>": "https://..." }
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 const BASE = "https://starchive.streambox.space";
 
 function staticAvatars() {

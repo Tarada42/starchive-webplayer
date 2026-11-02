@@ -2,8 +2,8 @@
 // original 66ejzz.vercel.app API: [{ id, artist, filename, title, url, thumbnailUrl,
 //   pictureUrl, size, date, index }] sorted newest-first by filename timestamp.
 const BASE = "https://starchive.streambox.space";
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 function isHidden(artistId) {
   try {

@@ -3,8 +3,8 @@
 // Excludes DJs listed in hidden.json (removed from the app after being unreachable /
 // without a picture for 14+ days).
 const BASE = "https://starchive.streambox.space";
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 function hiddenSet() {
   try {
