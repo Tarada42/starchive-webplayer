@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="description" content="Currently live DJs on STArchive — play high-quality streams directly." />
+    <title>Live DJs — STArchive</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap");
+      :root {
+        --bg: #0a0a0f;
+        --surface: #111118;
+        --surface2: #1a1a24;
+        --surface3: #222230;
+        --border: #ffffff12;
+        --accent: #7c3aed;
+        --accent2: #a855f7;
+        --accent-glow: #7c3aed4d;
+        --text: #f0f0f8;
+        --text2: #9090b0;
+        --text3: #5a5a7a;
+        --red: #ef4444;
+        --green: #22c55e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "DM Sans", sans-serif;
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+      a { color: inherit; text-decoration: none; }
+      .wrap { max-width: 860px; margin: 0 auto; padding: 24px; }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: var(--text);
+      }
+      .brand .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 8px var(--green);
+      }
+      .back {
+        color: var(--text2);
+        font-size: 0.9rem;
+        border: 1px solid var(--border);
+        padding: 8px 14px;
+        border-radius: 999px;
+        transition: 0.15s;
+      }
+      .back:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); }
+      h1 { font-family: "Syne", sans-serif; font-size: clamp(1.8rem, 5vw, 2.6rem); margin: 0 0 8px; }
+      .subtitle { color: var(--text2); margin-bottom: 28px; }
+      .status { color: var(--text2); font-size: 0.9rem; margin-bottom: 16px; }
+      .status .live-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--red);
+        margin-right: 6px;
+        box-shadow: 0 0 6px var(--red);
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      .dj-grid { display: grid; gap: 16px; }
+      .dj-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        transition: 0.15s;
+      }
+      .dj-card:hover { border-color: var(--accent); background: var(--surface2); }
+      .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        object-fit: cover;
+        background: var(--surface3);
+        border: 1px solid var(--border);
+      }
+      .avatar-fallback {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface3);
+        color: var(--text2);
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.4rem;
+        border: 1px solid var(--border);
+      }
+      .info { flex: 1; min-width: 0; }
+      .name { font-family: "Syne", sans-serif; font-weight: 700; font-size: 1.15rem; margin: 0 0 4px; }
+      .title {
+        color: var(--text2);
+        font-size: 0.95rem;
+        margin: 0 0 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .listeners { color: var(--text3); font-size: 0.8rem; margin-bottom: 12px; }
+      audio { width: 100%; height: 40px; border-radius: 8px; }
+      .empty { text-align: center; color: var(--text2); padding: 48px 0; }
+      .error { color: var(--red); }
+      .loading { color: var(--text2); padding: 40px 0; text-align: center; }
+      @media (max-width: 560px) {
+        .dj-card { flex-direction: column; align-items: stretch; }
+        .avatar, .avatar-fallback { width: 100%; height: 120px; border-radius: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">
+          <span class="dot"></span>
+          STArchive
+        </a>
+        <a class="back" href="/">← Back to archive</a>
+      </header>
+      <h1>Live DJs</h1>
+      <p class="subtitle">Tune in to currently streaming DJs, directly from the high-quality Icecast mount.</p>
+      <div class="status" id="status"><span class="live-dot"></span>Checking who's live…</div>
+      <div id="live-list"><div class="loading">Loading live DJs…</div></div>
+    </div>
+
+    <script>
+      const REFRESH_MS = 30000;
+      const listEl = document.getElementById("live-list");
+      const statusEl = document.getElementById("status");
+      let lastIds = [];
+
+      function setStatus(text, live) {
+        statusEl.innerHTML = live !== false
+          ? '<span class="live-dot"></span>' + text
+          : text;
+      }
+
+      function initials(name) {
+        return name.split(/[ _]+/).filter(Boolean).slice(0, 2).map(s => s[0].toUpperCase()).join("");
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+      }
+
+      function createCard(dj, avatarUrl) {
+        const card = document.createElement("article");
+        card.className = "dj-card";
+        const img = document.createElement("img");
+        img.className = "avatar";
+        img.alt = "";
+        img.loading = "lazy";
+        if (avatarUrl) img.src = avatarUrl;
+        else img.style.display = "none";
+        img.onerror = function () {
+          img.style.display = "none";
+          fallback.style.display = "flex";
+        };
+
+        const fallback = document.createElement("div");
+        fallback.className = "avatar-fallback";
+        fallback.textContent = initials(dj.displayName || dj.name);
+        if (avatarUrl) fallback.style.display = "none";
+
+        const info = document.createElement("div");
+        info.className = "info";
+        info.innerHTML = `
+          <h2 class="name">${escapeHtml(dj.displayName || dj.name)}</h2>
+          <p class="title" title="${escapeHtml(dj.title || "")}">${dj.title ? "Now playing: " + escapeHtml(dj.title) : "Live stream"}</p>
+          <div class="listeners">${dj.listeners || 0} listener${(dj.listeners || 0) === 1 ? "" : "s"}</div>
+        `;
+        const audio = document.createElement("audio");
+        audio.controls = true;
+        audio.preload = "none";
+        audio.src = dj.liveUrl;
+        info.appendChild(audio);
+
+        card.appendChild(img);
+        card.appendChild(fallback);
+        card.appendChild(info);
+        return card;
+      }
+
+      async function fetchAvatar(id) {
+        try {
+          const r = await fetch("/api/artist-thumbnails?artist=" + encodeURIComponent(id));
+          if (!r.ok) return null;
+          const j = await r.json();
+          return j && j.url ? j.url : null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      async function render(djs) {
+        if (!djs || !djs.length) {
+          listEl.innerHTML = '<div class="empty">No DJs are live right now.<br>Check back later or browse the <a href="/" style="color:var(--accent2);text-decoration:underline">archive</a>.</div>';
+          setStatus("Nobody live right now", false);
+          lastIds = [];
+          return;
+        }
+
+        const ids = djs.map(d => d.id).join(",");
+        if (lastIds.join(",") === ids) {
+          // Same DJs — update metadata in place so audio keeps playing.
+          const cards = listEl.querySelectorAll(".dj-card");
+          djs.forEach((dj, i) => {
+            const card = cards[i];
+            if (!card) return;
+            const title = card.querySelector(".title");
+            const listeners = card.querySelector(".listeners");
+            if (title && dj.title) title.textContent = "Now playing: " + escapeHtml(dj.title);
+            if (listeners) listeners.textContent = (dj.listeners || 0) + " listener" + ((dj.listeners || 0) === 1 ? "" : "s");
+          });
+          setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
+          return;
+        }
+
+        listEl.innerHTML = "";
+        for (const dj of djs) {
+          const avatar = await fetchAvatar(dj.id);
+          listEl.appendChild(createCard(dj, avatar));
+        }
+        lastIds = djs.map(d => d.id);
+        setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
+      }
+
+      async function load() {
+        try {
+          const r = await fetch("/api/live");
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const djs = await r.json();
+          await render(djs);
+        } catch (e) {
+          listEl.innerHTML = '<div class="empty error">Could not load live DJs: ' + escapeHtml(e.message) + "</div>";
+          setStatus("Live feed unavailable", false);
+          lastIds = [];
+        }
+      }
+
+      load();
+      setInterval(load, REFRESH_MS);
+    </script>
+  </body>
+</html>

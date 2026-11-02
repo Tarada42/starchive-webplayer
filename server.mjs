@@ -32,6 +32,9 @@ app.get("/api/tracks", (req, res) => tracks(req, res));
 app.get("/api/artist-thumbnails", (req, res) => thumbnails(req, res));
 app.get("/api/live", (req, res) => live(req, res));
 
+// Dedicated /live page (also reachable via /live.html served by express.static)
+app.get("/live", (_req, res) => res.sendFile(path.join(__dirname, "live.html")));
+
 // SPA fallback -> index.html for non-API GETs
 app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
 
