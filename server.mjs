@@ -9,6 +9,7 @@ import fs from "fs";
 import artists from "./api/artists.js";
 import tracks from "./api/tracks.js";
 import thumbnails from "./api/artist-thumbnails.js";
+import live from "./api/live.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -29,6 +30,7 @@ app.use(express.static(__dirname, { index: "index.html" }));
 app.get("/api/artists", (req, res) => artists(req, res));
 app.get("/api/tracks", (req, res) => tracks(req, res));
 app.get("/api/artist-thumbnails", (req, res) => thumbnails(req, res));
+app.get("/api/live", (req, res) => live(req, res));
 
 // SPA fallback -> index.html for non-API GETs
 app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(__dirname, "index.html")));
