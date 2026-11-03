@@ -11,7 +11,7 @@ RUN npm install --omit=dev --no-audit --no-fund
 
 # app code
 COPY server.mjs ./
-COPY index.html live.html manifest.json manifest.webmanifest favicon.svg registerSW.js shim.js sw.js ./
+COPY index.html live.html privacy.html manifest.json manifest.webmanifest favicon.svg registerSW.js shim.js sw.js ./
 COPY assets ./assets
 COPY icon-192.png icon-32.png icon-512.png apple-touch-icon.png ./
 COPY api ./api
