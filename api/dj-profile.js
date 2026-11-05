@@ -146,7 +146,11 @@ export default async function handler(req, res) {
     bio = null;
   }
 
-  const socials = getSocials(dj);
+  // Always include the DJ's Twitch channel — no manual entry needed, never forgotten.
+  const socials = {
+    twitch: `https://www.twitch.tv/${dj}`,
+    ...getSocials(dj),
+  };
 
   // Cache even on bio error so a transient Twitch failure doesn't hammer the API.
   cache.set(dj, { bio, socials, fetchedAt: now });
