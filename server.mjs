@@ -10,7 +10,7 @@ import artists from "./api/artists.js";
 import tracks from "./api/tracks.js";
 import thumbnails from "./api/artist-thumbnails.js";
 import live from "./api/live.js";
-import djProfile from "./api/dj-profile.js";
+import djProfile, { ALLOWED_SOCIAL_KEYS } from "./api/dj-profile.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -22,6 +22,128 @@ app.use((req, _res, next) => {
   const t = new Date().toISOString();
   console.log(`[${t}] ${req.method} ${req.originalUrl}`);
   next();
+});
+
+// Admin routes for DJ socials editor (auth + rate-limiting handled by proxy).
+// These must be defined before the SPA fallback and static catch-all.
+
+function repoSocialsPath() {
+  return path.join(process.cwd(), "dj-socials.json");
+}
+
+function writableSocialsPath() {
+  return process.env.DJ_SOCIALS_PATH
+    ? path.resolve(process.env.DJ_SOCIALS_PATH)
+    : repoSocialsPath();
+}
+
+function readSocialsPath() {
+  const writable = writableSocialsPath();
+  if (fs.existsSync(writable)) return writable;
+  return repoSocialsPath();
+}
+
+function readSocials() {
+  const p = readSocialsPath();
+  try {
+    if (!fs.existsSync(p)) return {};
+    return JSON.parse(fs.readFileSync(p, "utf8"));
+  } catch (e) {
+    console.error("Failed to read socials file:", e);
+    return {};
+  }
+}
+
+function writeSocials(data) {
+  const target = writableSocialsPath();
+  const dir = path.dirname(target);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const tmp = `${target}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, target);
+}
+
+function isValidAdminUsername(u) {
+  return typeof u === "string" && /^[a-zA-Z0-9_]+$/.test(u);
+}
+
+function sanitizeAdminSocials(input) {
+  if (!input || typeof input !== "object") return {};
+  const out = {};
+  for (const [k, v] of Object.entries(input)) {
+    if (!ALLOWED_SOCIAL_KEYS.has(k)) continue;
+    if (typeof v !== "string") continue;
+    const trimmed = v.trim();
+    if (!trimmed) continue;
+    if (!/^https?:\/\//.test(trimmed)) continue;
+    out[k] = trimmed;
+  }
+  return out;
+}
+
+app.get("/coliflower/socials", (_req, res) => {
+  try {
+    const all = readSocials();
+    const out = {};
+    for (const [username, entry] of Object.entries(all)) {
+      if (!entry || typeof entry !== "object") continue;
+      const clean = {};
+      for (const [k, v] of Object.entries(entry)) {
+        if (ALLOWED_SOCIAL_KEYS.has(k) && typeof v === "string") {
+          clean[k] = v;
+        }
+      }
+      out[username] = clean;
+    }
+    res.status(200).json({ djs: out });
+  } catch (e) {
+    console.error("GET /coliflower/socials failed:", e);
+    res.status(500).json({ error: "Failed to load socials" });
+  }
+});
+
+app.post("/coliflower/socials", (req, res) => {
+  try {
+    const { username, socials } = req.body || {};
+    if (!isValidAdminUsername(username)) {
+      return res.status(400).json({ error: "Invalid username" });
+    }
+    const dj = username.toLowerCase();
+    const cleaned = sanitizeAdminSocials(socials);
+    const all = readSocials();
+    all[dj] = cleaned;
+    writeSocials(all);
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    console.error("POST /coliflower/socials failed:", e);
+    res.status(500).json({ error: "Failed to save" });
+  }
+});
+
+app.post("/coliflower/socials/delete", (req, res) => {
+  try {
+    const { username } = req.body || {};
+    if (!isValidAdminUsername(username)) {
+      return res.status(400).json({ error: "Invalid username" });
+    }
+    const dj = username.toLowerCase();
+    const all = readSocials();
+    if (!(dj in all)) {
+      return res.status(400).json({ error: "DJ not found" });
+    }
+    delete all[dj];
+    writeSocials(all);
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    console.error("POST /coliflower/socials/delete failed:", e);
+    res.status(500).json({ error: "Failed to save" });
+  }
+});
+
+app.get("/coliflower", (_req, res) => {
+  res.sendFile(path.join(__dirname, "admin.html"));
 });
 
 // Static files

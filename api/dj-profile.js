@@ -9,7 +9,7 @@ import path from "path";
 const CACHE_TTL_MS = 60_000;
 const cache = new Map(); // dj -> { bio, socials, fetchedAt }
 
-const ALLOWED_SOCIAL_KEYS = new Set([
+export const ALLOWED_SOCIAL_KEYS = new Set([
   "x",
   "twitter",
   "instagram",
@@ -80,9 +80,18 @@ async function getTwitchBio(username) {
   return data.data[0].description || null;
 }
 
+function socialsFilePath() {
+  const envPath = process.env.DJ_SOCIALS_PATH;
+  if (envPath) {
+    const resolved = path.resolve(envPath);
+    if (fs.existsSync(resolved)) return resolved;
+  }
+  return path.join(process.cwd(), "dj-socials.json");
+}
+
 function getSocials(username) {
   try {
-    const p = path.join(process.cwd(), "dj-socials.json");
+    const p = socialsFilePath();
     if (!fs.existsSync(p)) return {};
     const all = JSON.parse(fs.readFileSync(p, "utf8"));
     const entry = all[username];
