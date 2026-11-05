@@ -10,6 +10,7 @@ import artists from "./api/artists.js";
 import tracks from "./api/tracks.js";
 import thumbnails from "./api/artist-thumbnails.js";
 import live from "./api/live.js";
+import djProfile from "./api/dj-profile.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -31,6 +32,7 @@ app.get("/api/artists", (req, res) => artists(req, res));
 app.get("/api/tracks", (req, res) => tracks(req, res));
 app.get("/api/artist-thumbnails", (req, res) => thumbnails(req, res));
 app.get("/api/live", (req, res) => live(req, res));
+app.get("/api/dj-profile", (req, res) => djProfile(req, res));
 
 // Dedicated /live page (also reachable via /live.html served by express.static)
 app.get("/live", (_req, res) => res.sendFile(path.join(__dirname, "live.html")));
