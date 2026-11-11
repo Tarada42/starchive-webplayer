@@ -141,6 +141,7 @@
         transition: 0.15s;
       }
       .open-external:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); }
+      .watch-twitch { display: block; margin-top: 8px; width: fit-content; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .error { color: var(--red); }
@@ -227,6 +228,15 @@
         ext.href = "/stream/" + encodeURIComponent(dj.id) + ".m3u";
         ext.target = "_blank";
         info.appendChild(ext);
+
+        // Link to the DJ's Twitch channel (dj.id is the Twitch username).
+        const twitch = document.createElement("a");
+        twitch.className = "open-external watch-twitch";
+        twitch.textContent = "Watch on Twitch";
+        twitch.href = "https://www.twitch.tv/" + encodeURIComponent(dj.id);
+        twitch.target = "_blank";
+        twitch.rel = "noopener noreferrer";
+        info.appendChild(twitch);
 
         card.appendChild(img);
         card.appendChild(fallback);
