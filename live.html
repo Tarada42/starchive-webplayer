@@ -153,7 +153,9 @@
         transition: 0.15s;
       }
       .open-external:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); }
-      .watch-twitch { display: block; margin-top: 8px; width: fit-content; }
+      .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+      .card-actions .open-external { margin-top: 0; }
+      .watch-twitch { display: inline-block; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .empty-emoji { color: var(--text3); margin-bottom: 14px; display: flex; justify-content: center; }
@@ -338,12 +340,8 @@
 
       function buildTwitchViewersText(twitch) {
         if (!twitch || twitch.isLive !== true) return null;
-        const viewersPart = typeof twitch.viewers === "number" ? "Twitch Viewers: " + twitch.viewers : "";
-        const gamePart = twitch.game ? escapeHtml(twitch.game) : "";
-        if (viewersPart && gamePart) return viewersPart + " - " + gamePart;
-        if (viewersPart) return viewersPart;
-        if (gamePart) return gamePart;
-        return null;
+        // Keep it minimal: viewers only (no category/game suffix).
+        return typeof twitch.viewers === "number" ? "Twitch Viewers: " + twitch.viewers : null;
       }
 
       function updateTwitchStats(el, twitch) {
@@ -418,7 +416,6 @@
         // NOT ride this proxy (saves bandwidth).
         ext.href = "/stream/" + encodeURIComponent(dj.id) + ".m3u";
         ext.target = "_blank";
-        info.appendChild(ext);
 
         // Link to the DJ's Twitch channel (dj.id is the Twitch username).
         const twitch = document.createElement("a");
@@ -427,7 +424,13 @@
         twitch.href = "https://www.twitch.tv/" + encodeURIComponent(dj.id);
         twitch.target = "_blank";
         twitch.rel = "noopener noreferrer";
-        info.appendChild(twitch);
+
+        // Both links sit side by side to keep the card compact.
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        actions.appendChild(ext);
+        actions.appendChild(twitch);
+        info.appendChild(actions);
 
         card.appendChild(img);
         card.appendChild(fallback);
