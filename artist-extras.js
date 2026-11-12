@@ -246,7 +246,10 @@
     var btn = null;
     var items = nav.querySelectorAll(".nav-item");
     for (var i = 0; i < items.length; i++) {
-      if (/^live$/i.test((items[i].textContent || "").trim())) { btn = items[i]; break; }
+      // Match the label span, not the whole button: once the badge is attached the
+      // button's textContent becomes e.g. "Live2" and an exact match would fail.
+      var label = items[i].querySelector("span:not(.ax-live-badge)") || items[i];
+      if (/^live$/i.test((label.textContent || "").trim())) { btn = items[i]; break; }
     }
     if (!btn) return;
     var badge = btn.querySelector(".ax-live-badge");
