@@ -296,11 +296,11 @@
   <body>
     <div class="wrap">
       <header>
-        <a class="brand" href="/">
+        <a class="brand" href="/" target="_top">
           <span class="dot"></span>
           STArchive
         </a>
-        <a class="back" href="/">← Back to archive</a>
+        <a class="back" href="/" target="_top">← Back to archive</a>
       </header>
       <h1>Live DJs</h1>
       <div class="status" id="status"><span class="live-dot"></span>Checking who's live…</div>
@@ -544,6 +544,7 @@
         var browse = document.createElement("a");
         browse.className = "joke-btn";
         browse.href = "/";
+        browse.target = "_top";   // the SPA renders this page in an iframe: break out instead of nesting
         browse.textContent = "Browse the archive";
         actions.appendChild(yes);
         actions.appendChild(browse);
