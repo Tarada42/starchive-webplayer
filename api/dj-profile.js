@@ -1,13 +1,23 @@
-// /api/dj-profile?dj=<username> — returns a Twitch bio + manually-curated social links.
+// /api/dj-profile?dj=<username> — returns Twitch profile info + bio + social links + live status + follower count.
 //
-// Response: { "dj": "<username>", "bio": "<string|null>", "socials": {...}, "error": "<string|null>" }
-// Bio comes from Twitch Helix /users. Social links come from dj-socials.json.
+// Response: {
+//   "dj": "<username>",
+//   "bio": "<string|null>",
+//   "socials": { "twitch": "...", ... },
+//   "profile": { "displayName": "<string|null>", "avatar": "<string|null>", "createdAt": "<string|null>", "url": "<string>" },
+//   "live": { "isLive": <boolean>, "title": "<string|null>", "game": "<string|null>", "viewers": <number|null>, "startedAt": "<string|null>" },
+//   "followers": <number|null>,
+//   "error": "<string|null>"
+// }
+// Bio/profile/live come from Twitch Helix. Followers come from decapi.me (best-effort). Social links come from dj-socials.json.
 // Twitch credentials are read from process.env and are never returned or logged.
 import fs from "fs";
 import path from "path";
 
 const CACHE_TTL_MS = 60_000;
-const cache = new Map(); // dj -> { bio, socials, fetchedAt }
+const FOLLOWERS_TTL_MS = 60 * 60 * 1_000;
+const cache = new Map(); // dj -> { bio, profile, socials, live, fetchedAt }
+const followersCache = new Map(); // dj -> { value, fetchedAt }
 
 export const ALLOWED_SOCIAL_KEYS = new Set([
   "x",
@@ -39,6 +49,7 @@ async function getTwitchToken() {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: params.toString(),
+    signal: AbortSignal.timeout(4000),
   });
 
   if (!r.ok) {
@@ -52,18 +63,18 @@ async function getTwitchToken() {
   return { accessToken: data.access_token, clientId };
 }
 
-async function getTwitchBio(username) {
-  const { accessToken, clientId } = await getTwitchToken();
+async function getTwitchUser(username, token) {
   const url = `https://api.twitch.tv/helix/users?login=${encodeURIComponent(username)}`;
 
   // Build Authorization header value as concatenation to avoid accidental secret-leak patterns.
-  const authValue = "Bearer" + " " + accessToken;
+  const authValue = "Bearer" + " " + token.accessToken;
 
   const r = await fetch(url, {
     headers: {
       Authorization: authValue,
-      "Client-Id": clientId,
+      "Client-Id": token.clientId,
     },
+    signal: AbortSignal.timeout(4000),
   });
 
   if (!r.ok) {
@@ -77,7 +88,75 @@ async function getTwitchBio(username) {
   if (!Array.isArray(data.data) || data.data.length === 0) {
     return null;
   }
-  return data.data[0].description || null;
+  return data.data[0];
+}
+
+function buildProfile(user, username) {
+  const login = user?.login || username;
+  return {
+    displayName: user?.display_name || null,
+    avatar: user?.profile_image_url || null,
+    createdAt: user?.created_at || null,
+    url: `https://www.twitch.tv/${login}`,
+  };
+}
+
+async function getLiveStatus(username, token) {
+  const url = `https://api.twitch.tv/helix/streams?user_login=${encodeURIComponent(username)}`;
+  const authValue = "Bearer" + " " + token.accessToken;
+
+  const r = await fetch(url, {
+    headers: {
+      Authorization: authValue,
+      "Client-Id": token.clientId,
+    },
+    signal: AbortSignal.timeout(4000),
+  });
+
+  if (!r.ok) {
+    return { isLive: false, title: null, game: null, viewers: null, startedAt: null };
+  }
+
+  const data = await r.json();
+  const stream = Array.isArray(data.data) ? data.data[0] : undefined;
+  if (stream && stream.type === "live") {
+    return {
+      isLive: true,
+      title: stream.title || null,
+      game: stream.game_name || null,
+      viewers: typeof stream.viewer_count === "number" ? stream.viewer_count : null,
+      startedAt: stream.started_at || null,
+    };
+  }
+
+  return { isLive: false, title: null, game: null, viewers: null, startedAt: null };
+}
+
+async function getFollowers(username) {
+  try {
+    const url = `https://decapi.me/twitch/followcount/${encodeURIComponent(username)}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return null;
+
+    const text = (await r.text()).trim();
+    if (!text) return null;
+
+    const digitsOnly = text.replace(/\D/g, "");
+    if (!digitsOnly) return null;
+
+    const value = Number.parseInt(digitsOnly, 10);
+    return Number.isFinite(value) ? value : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getCachedFollowers(dj, now) {
+  const cached = followersCache.get(dj);
+  if (cached && now - cached.fetchedAt < FOLLOWERS_TTL_MS) {
+    return cached.value;
+  }
+  return undefined;
 }
 
 function socialsFilePath() {
@@ -129,6 +208,9 @@ export default async function handler(req, res) {
       dj: rawDj || null,
       bio: null,
       socials: {},
+      profile: { displayName: null, avatar: null, createdAt: null, url: `https://www.twitch.tv/${rawDj || ""}` },
+      live: { isLive: false, title: null, game: null, viewers: null, startedAt: null },
+      followers: null,
       error: "Invalid dj parameter",
     });
   }
@@ -138,21 +220,59 @@ export default async function handler(req, res) {
   const now = Date.now();
   const cached = cache.get(dj);
   if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
+    let followers = getCachedFollowers(dj, now);
+    if (followers === undefined) {
+      followers = await getFollowers(dj);
+      followersCache.set(dj, { value: followers, fetchedAt: now });
+    }
     return res.status(200).json({
       dj,
       bio: cached.bio,
       socials: cached.socials,
+      profile: cached.profile,
+      live: cached.live,
+      followers,
       error: null,
     });
   }
 
-  let bio = null;
+  let token = null;
   let error = null;
   try {
-    bio = await getTwitchBio(dj);
+    token = await getTwitchToken();
   } catch (e) {
     error = sanitizeError(e);
-    bio = null;
+  }
+
+  let user = null;
+  if (token) {
+    try {
+      user = await getTwitchUser(dj, token);
+    } catch (e) {
+      error = sanitizeError(e);
+    }
+  }
+
+  const bio = user?.description || null;
+  const profile = buildProfile(user, dj);
+
+  let live = { isLive: false, title: null, game: null, viewers: null, startedAt: null };
+  if (token) {
+    try {
+      live = await getLiveStatus(dj, token);
+    } catch (e) {
+      live = { isLive: false, title: null, game: null, viewers: null, startedAt: null };
+    }
+  }
+
+  let followers = getCachedFollowers(dj, now);
+  if (followers === undefined) {
+    try {
+      followers = await getFollowers(dj);
+    } catch (e) {
+      followers = null;
+    }
+    followersCache.set(dj, { value: followers, fetchedAt: now });
   }
 
   // Always include the DJ's Twitch channel — no manual entry needed, never forgotten.
@@ -162,7 +282,7 @@ export default async function handler(req, res) {
   };
 
   // Cache even on bio error so a transient Twitch failure doesn't hammer the API.
-  cache.set(dj, { bio, socials, fetchedAt: now });
+  cache.set(dj, { bio, profile, socials, live, fetchedAt: now });
 
-  res.status(200).json({ dj, bio, socials, error });
+  res.status(200).json({ dj, bio, socials, profile, live, followers, error });
 }
