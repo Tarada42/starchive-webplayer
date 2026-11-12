@@ -75,6 +75,17 @@ async function twitchAvatar(username) {
   }
 }
 
+async function resolveLive(artist) {
+  try {
+    const sb = await streamboxNewest();
+    const ts = sb.get(artist);
+    if (ts) return `${BASE}/thumbnails/${artist}_picture_${ts}.jpg`;
+  } catch (e) {
+    /* fall through to Twitch */
+  }
+  return await twitchAvatar(artist);
+}
+
 export default async function handler(req, res) {
   const want = req.query.artist ? req.query.artist.toString() : null;
   res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=86400");
@@ -88,7 +99,11 @@ export default async function handler(req, res) {
       if (!hide.has(k)) filtered[k] = v;
     }
     if (want) {
-      return res.status(200).json({ url: filtered[want] || null, id: want });
+      // New DJs are not in the static map until the next refresh - resolve live
+      // (archive picture, then Twitch profile picture) instead of returning null.
+      if (filtered[want]) return res.status(200).json({ url: filtered[want], id: want });
+      const live = await resolveLive(want);
+      return res.status(200).json({ url: live || null, id: want });
     }
     return res.status(200).json(filtered);
   }
