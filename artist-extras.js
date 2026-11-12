@@ -47,7 +47,8 @@
       "@keyframes axPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}",
       ".ax-live-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;color:var(--red)}",
       ".ax-live-title{font-size:.9rem;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-      ".ax-live-go{font-size:.8rem;color:var(--accent2)}"
+      ".ax-live-go{font-size:.8rem;color:var(--accent2)}",
+      ".ax-live-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.68rem;font-weight:700;line-height:1;min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}"
     ].join("");
     var s = document.createElement("style");
     s.id = "ax-styles";
@@ -237,6 +238,42 @@
       .catch(function () {});
   }
 
+  var liveCount = 0;
+
+  function ensureLiveBadge(count) {
+    var nav = document.querySelector(".sidebar-nav");
+    if (!nav) return;
+    var btn = null;
+    var items = nav.querySelectorAll(".nav-item");
+    for (var i = 0; i < items.length; i++) {
+      if (/^live$/i.test((items[i].textContent || "").trim())) { btn = items[i]; break; }
+    }
+    if (!btn) return;
+    var badge = btn.querySelector(".ax-live-badge");
+    if (count <= 0) {
+      if (badge) badge.remove();
+      return;
+    }
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "ax-live-badge";
+      btn.appendChild(badge);
+    }
+    badge.textContent = String(count);
+    badge.title = count + (count === 1 ? " DJ live" : " DJs live");
+  }
+
+  function refreshLiveBadge() {
+    fetch("/api/live", { headers: { Accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (list) {
+        if (!Array.isArray(list)) return;
+        liveCount = list.length;
+        ensureLiveBadge(liveCount);
+      })
+      .catch(function () {});
+  }
+
   function sync() {
     var dj = currentDj();
     if (!dj) return;
@@ -262,8 +299,12 @@
   var timer = null;
   function schedule() {
     if (timer) return;
-    timer = setTimeout(function () { timer = null; sync(); }, 80);
+    timer = setTimeout(function () { timer = null; sync(); ensureLiveBadge(liveCount); }, 80);
   }
+
+  injectStyles();
+  refreshLiveBadge();
+  setInterval(refreshLiveBadge, 60000);
 
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule);
