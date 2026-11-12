@@ -1,0 +1,42 @@
+# STArchive webapp - production compose for the Hostinger VPS (self-hosted).
+#
+# IMPORTANT: the host ALREADY runs Traefik in a separate project (/docker/traefik).
+# Do NOT add a traefik service here - a second Traefik crash-loops on ports 80/443.
+# This file defines only the webapp container that actually serves the site.
+#
+# Values come from /docker/starchive-webapp/.env (never commit secrets):
+#   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, COLIFLOWER_USERS
+
+services:
+  webapp:
+    build: .
+    image: starchive-webapp
+    restart: unless-stopped
+    container_name: starchive-webapp
+    environment:
+      - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
+      - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
+      - DJ_SOCIALS_PATH=/app/data/dj-socials.json
+    volumes:
+      # Persistent, admin-editable data (dj-socials.json written by the /coliflower editor).
+      - ./data:/app/data
+    labels:
+      - "traefik.enable=true"
+
+      # Public site
+      - "traefik.http.routers.webapp.rule=Host(`webapp.streambox.space`)"
+      - "traefik.http.routers.webapp.entrypoints=websecure"
+      - "traefik.http.routers.webapp.tls=true"
+      - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
+      - "traefik.http.services.webapp.loadbalancer.server.port=8080"
+
+      # /coliflower admin editor - basic auth + rate limit
+      - "traefik.http.middlewares.coliflower-auth.basicauth.users=${COLIFLOWER_USERS}"
+      - "traefik.http.middlewares.coliflower-ratelimit.ratelimit.average=5"
+      - "traefik.http.middlewares.coliflower-ratelimit.ratelimit.burst=10"
+      - "traefik.http.routers.coliflower.rule=Host(`webapp.streambox.space`) && PathPrefix(`/coliflower`)"
+      - "traefik.http.routers.coliflower.entrypoints=websecure"
+      - "traefik.http.routers.coliflower.tls=true"
+      - "traefik.http.routers.coliflower.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.coliflower.middlewares=coliflower-auth,coliflower-ratelimit"
+      - "traefik.http.routers.coliflower.service=webapp"
