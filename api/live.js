@@ -24,6 +24,23 @@ function hiddenSet() {
   return new Set();
 }
 
+// Icecast serves titles HTML-escaped ("Beers&amp;Beatz"). Decode once here so every
+// consumer gets the real text; clients then escape it for display as usual.
+function decodeEntities(input) {
+  let s = String(input == null ? "" : input);
+  s = s
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)));
+  // &amp; last, so "&amp;lt;" becomes "&lt;" instead of "<".
+  return s.replace(/&amp;/g, "&");
+}
+
 async function liveMounts() {
   const res = await fetch(LIVE_BASE + "/", { headers: { "User-Agent": "starchive-api/1.0" } });
   if (!res.ok) throw new Error("HTTP " + res.status);
@@ -44,7 +61,7 @@ async function liveMounts() {
     const listenersMatch = /<td>Listeners \(current\):<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i.exec(body);
     mounts.push({
       id,
-      title: titleMatch ? titleMatch[1].replace(/<[^>]+>/g, "").trim() : "",
+      title: titleMatch ? decodeEntities(titleMatch[1].replace(/<[^>]+>/g, "")).trim() : "",
       listeners: listenersMatch ? parseInt(listenersMatch[1].replace(/[^\d]/g, ""), 10) || 0 : 0,
     });
   }
