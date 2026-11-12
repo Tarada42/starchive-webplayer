@@ -135,7 +135,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .listeners { color: var(--text3); font-size: 0.8rem; margin-bottom: 4px; }
       .twitch-stats {
         color: var(--text3);
         font-size: 0.8rem;
@@ -157,6 +156,26 @@
       .watch-twitch { display: block; margin-top: 8px; width: fit-content; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
+      .empty-emoji { color: var(--text3); margin-bottom: 14px; display: flex; justify-content: center; }
+      .empty-emoji svg { width: 40px; height: 40px; }
+      .empty-title { margin: 0 0 6px; color: var(--text); font-size: 1.05rem; font-weight: 600; }
+      .empty-sub { margin: 0; font-size: .88rem; }
+      .empty-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+      .joke-btn {
+        font: inherit; font-size: .84rem; padding: 8px 15px; border-radius: 999px;
+        border: 1px solid var(--border); background: transparent; color: var(--text2);
+        cursor: pointer; text-decoration: none; transition: .15s;
+      }
+      .joke-btn:hover { color: var(--text); border-color: var(--accent); background: var(--surface2); }
+      .joke-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .joke-btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+      .joke-box {
+        margin: 20px auto 0; max-width: 540px; text-align: left;
+        background: var(--surface); border: 1px solid var(--border);
+        border-radius: 14px; padding: 18px 20px;
+      }
+      .joke-text { margin: 0 0 14px; color: var(--text); font-size: .95rem; line-height: 1.5; }
+      .joke-meta { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
       .error { color: var(--red); }
       .loading { color: var(--text2); padding: 40px 0; text-align: center; }
       .modal-backdrop {
@@ -291,6 +310,7 @@
       const listEl = document.getElementById("live-list");
       const statusEl = document.getElementById("status");
       let lastIds = [];
+      let emptyShown = false;
       let modalEl = null;
       let modalCurrentDj = null;
       let modalRefreshTimer = null;
@@ -369,7 +389,6 @@
         info.innerHTML = `
           <h2 class="name" role="button" tabindex="0">${escapeHtml(dj.displayName || dj.name)}</h2>
           <p class="title" title="${escapeHtml(dj.title || "")}">${dj.title ? "Now playing: " + escapeHtml(dj.title) : "Live stream"}</p>
-          <div class="listeners">${dj.listeners || 0} listener${(dj.listeners || 0) === 1 ? "" : "s"}</div>
         `;
 
         const stats = document.createElement("div");
@@ -423,20 +442,167 @@
 
       function updateCard(card, dj) {
         const title = card.querySelector(".title");
-        const listeners = card.querySelector(".listeners");
         const stats = card.querySelector(".twitch-stats");
         if (title && dj.title) title.textContent = "Now playing: " + escapeHtml(dj.title);
-        if (listeners) listeners.textContent = (dj.listeners || 0) + " listener" + ((dj.listeners || 0) === 1 ? "" : "s");
         if (stats) updateTwitchStats(stats, dj.twitch);
+      }
+
+      // ---- Dad jokes for the empty state (no repeats, tracked in a cookie) ----
+      var JOKE_COOKIE = "starchive_jokes_told";
+      var JOKES = null;
+      var jokesLoad = null;
+
+      function readToldJokes() {
+        var out = new Set();
+        var m = document.cookie.match(new RegExp("(?:^|; )" + JOKE_COOKIE + "=([^;]*)"));
+        if (!m) return out;
+        m[1].split(",").forEach(function (s) {
+          var n = parseInt(s, 10);
+          if (!isNaN(n)) out.add(n);
+        });
+        return out;
+      }
+
+      function writeToldJokes(set) {
+        document.cookie = JOKE_COOKIE + "=" + Array.from(set).join(",") +
+          "; path=/; max-age=" + (365 * 24 * 3600) + "; SameSite=Lax";
+      }
+
+      function loadJokes() {
+        if (JOKES) return Promise.resolve(JOKES);
+        if (jokesLoad) return jokesLoad;
+        jokesLoad = fetch("/dad-jokes.json")
+          .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+          .then(function (arr) { JOKES = Array.isArray(arr) && arr.length ? arr : null; return JOKES; })
+          .catch(function () { JOKES = null; jokesLoad = null; return null; });
+        return jokesLoad;
+      }
+
+      function nextJoke() {
+        var told = readToldJokes();
+        var total = JOKES.length;
+        var available = [];
+        for (var i = 0; i < total; i++) { if (!told.has(i)) available.push(i); }
+        if (!available.length) {
+          told = new Set();
+          for (var j = 0; j < total; j++) available.push(j);
+        }
+        var idx = available[Math.floor(Math.random() * available.length)];
+        told.add(idx);
+        writeToldJokes(told);
+        return { text: JOKES[idx], left: total - told.size, total: total };
+      }
+
+      function headphonesIcon() {
+        var ns = "http://www.w3.org/2000/svg";
+        var svg = document.createElementNS(ns, "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "1.6");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        var p = document.createElementNS(ns, "path");
+        p.setAttribute("d", "M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3");
+        svg.appendChild(p);
+        return svg;
+      }
+
+      function renderEmpty() {
+        listEl.innerHTML = "";
+        var wrap = document.createElement("div");
+        wrap.className = "empty";
+
+        var emoji = document.createElement("div");
+        emoji.className = "empty-emoji";
+        emoji.appendChild(headphonesIcon());
+
+        var title = document.createElement("p");
+        title.className = "empty-title";
+        title.textContent = "No DJs are live right now";
+
+        var sub = document.createElement("p");
+        sub.className = "empty-sub";
+        sub.textContent = "Do you want to hear a joke instead?";
+
+        var actions = document.createElement("div");
+        actions.className = "empty-actions";
+        var yes = document.createElement("button");
+        yes.type = "button";
+        yes.className = "joke-btn primary";
+        yes.textContent = "Yes, joke!";
+        var browse = document.createElement("a");
+        browse.className = "joke-btn";
+        browse.href = "/";
+        browse.textContent = "Browse the archive";
+        actions.appendChild(yes);
+        actions.appendChild(browse);
+
+        var box = document.createElement("div");
+        box.className = "joke-box";
+        box.hidden = true;
+        var text = document.createElement("p");
+        text.className = "joke-text";
+        var meta = document.createElement("div");
+        meta.className = "joke-meta";
+        var more = document.createElement("button");
+        more.type = "button";
+        more.className = "joke-btn";
+        more.textContent = "Another";
+        var check = document.createElement("button");
+        check.type = "button";
+        check.className = "joke-btn";
+        check.textContent = "Check live";
+        meta.appendChild(more);
+        meta.appendChild(check);
+        box.appendChild(text);
+        box.appendChild(meta);
+
+        wrap.appendChild(emoji);
+        wrap.appendChild(title);
+        wrap.appendChild(sub);
+        wrap.appendChild(actions);
+        wrap.appendChild(box);
+        listEl.appendChild(wrap);
+
+        function show(pick) {
+          text.textContent = pick.text;
+          box.hidden = false;
+          actions.style.display = "none";
+          more.textContent = "Another (" + pick.left + " left)";
+        }
+
+        yes.addEventListener("click", function () {
+          yes.disabled = true;
+          yes.textContent = "Loading...";
+          loadJokes().then(function (jokes) {
+            if (!jokes) {
+              yes.disabled = false;
+              yes.textContent = "Yes, joke!";
+              sub.textContent = "Jokes are unavailable right now - check back later.";
+              return;
+            }
+            show(nextJoke());
+          });
+        });
+
+        more.addEventListener("click", function () { show(nextJoke()); });
+        check.addEventListener("click", function () {
+          setStatus("Checking...", false);
+          load();
+        });
       }
 
       async function render(djs) {
         if (!djs || !djs.length) {
-          listEl.innerHTML = '<div class="empty">No DJs are live right now.<br>Check back later or browse the <a href="/" style="color:var(--accent2);text-decoration:underline">archive</a>.</div>';
+          // Keep the joke state across the 30s poll: only build the empty view once.
+          if (!emptyShown) { renderEmpty(); emptyShown = true; }
           setStatus("Nobody live right now", false);
           lastIds = [];
           return;
         }
+        emptyShown = false;
 
         const ids = djs.map(d => d.id).join(",");
         if (lastIds.join(",") === ids) {

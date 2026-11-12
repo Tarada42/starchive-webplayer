@@ -16,7 +16,7 @@ COPY video_playback.mp4 ./
 COPY assets ./assets
 COPY icon-192.png icon-32.png icon-512.png apple-touch-icon.png ./
 COPY api ./api
-COPY avatars.json hidden.json dj-socials.json ./
+COPY avatars.json hidden.json dj-socials.json dad-jokes.json ./
 
 ENV PORT=8080
 EXPOSE 8080
