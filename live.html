@@ -176,6 +176,7 @@
       }
       .joke-text { margin: 0 0 14px; color: var(--text); font-size: .95rem; line-height: 1.5; }
       .joke-meta { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+      .dj-card.is-playing-target { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-glow, rgba(124,58,237,.45)); }
       .error { color: var(--red); }
       .loading { color: var(--text2); padding: 40px 0; text-align: center; }
       .modal-backdrop {
@@ -311,6 +312,11 @@
       const statusEl = document.getElementById("status");
       let lastIds = [];
       let emptyShown = false;
+      // /live?play=<dj> - jump to that DJ's card and start their stream.
+      // Sanitised to a safe charset so it can never reach innerHTML/selectors unsafely.
+      const PLAY_DJ = (new URLSearchParams(location.search).get("play") || "")
+        .trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      let playHandled = false;
       let modalEl = null;
       let modalCurrentDj = null;
       let modalRefreshTimer = null;
@@ -626,12 +632,30 @@
         setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
       }
 
+      function maybeStartRequested() {
+        if (!PLAY_DJ || playHandled) return;
+        const card = document.querySelector('.dj-card[data-dj-id="' + PLAY_DJ.replace(/["\\]/g, "") + '"]');
+        if (!card) return;
+        const audio = card.querySelector("audio");
+        if (!audio) return;
+        playHandled = true;
+        card.scrollIntoView({ block: "center", behavior: "smooth" });
+        card.classList.add("is-playing-target");
+        const p = audio.play();
+        if (p && p.catch) {
+          p.catch(function () {
+            setStatus("Press play to start " + escapeHtml(PLAY_DJ), false);
+          });
+        }
+      }
+
       async function load() {
         try {
           const r = await fetch("/api/live");
           if (!r.ok) throw new Error("HTTP " + r.status);
           const djs = await r.json();
           await render(djs);
+          maybeStartRequested();
         } catch (e) {
           listEl.innerHTML = '<div class="empty error">Could not load live DJs: ' + escapeHtml(e.message) + "</div>";
           setStatus("Live feed unavailable", false);

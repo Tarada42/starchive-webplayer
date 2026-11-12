@@ -40,7 +40,14 @@
       ".ax-socials{display:flex;align-items:center;gap:12px;margin-top:2px}",
       ".ax-social{color:var(--text3);display:inline-flex;transition:color .15s,transform .15s}",
       ".ax-social:hover{color:var(--accent2);transform:translateY(-1px)}",
-      ".ax-social svg{width:16px;height:16px;display:block}"
+      ".ax-social svg{width:16px;height:16px;display:block}",
+      ".ax-live-row{display:flex;align-items:center;gap:10px;margin:14px 0 6px;padding:12px 14px;border:1px solid var(--border);border-left:3px solid var(--red);border-radius:12px;background:var(--surface);text-decoration:none;color:var(--text);transition:.15s}",
+      ".ax-live-row:hover{background:var(--surface2);border-color:var(--accent)}",
+      ".ax-live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:axPulse 2s infinite}",
+      "@keyframes axPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}70%{box-shadow:0 0 0 8px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}",
+      ".ax-live-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;color:var(--red)}",
+      ".ax-live-title{font-size:.9rem;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+      ".ax-live-go{font-size:.8rem;color:var(--accent2)}"
     ].join("");
     var s = document.createElement("style");
     s.id = "ax-styles";
@@ -189,6 +196,47 @@
     return /^[a-z0-9_]+$/.test(t) ? t : null;
   }
 
+  function addLiveRow(dj) {
+    var list = document.querySelector(".tracks-container");
+    if (!list || !list.parentElement) return;
+    var existing = document.querySelector(".ax-live-row");
+    if (existing) {
+      if (existing.getAttribute("data-dj") === dj) return;
+      existing.remove();
+    }
+    var row = document.createElement("a");
+    row.className = "ax-live-row";
+    row.setAttribute("data-dj", dj);
+    row.href = "/live?play=" + encodeURIComponent(dj);
+    var dot = document.createElement("span");
+    dot.className = "ax-live-dot";
+    var label = document.createElement("span");
+    label.className = "ax-live-label";
+    label.textContent = "LIVE NOW";
+    var title = document.createElement("span");
+    title.className = "ax-live-title";
+    title.textContent = "Listen to " + dj + " live";
+    var go = document.createElement("span");
+    go.className = "ax-live-go";
+    go.textContent = "Open live page";
+    row.appendChild(dot);
+    row.appendChild(label);
+    row.appendChild(title);
+    row.appendChild(go);
+    list.parentElement.insertBefore(row, list);
+  }
+
+  function checkArtistLive(dj) {
+    fetch("/api/live", { headers: { Accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (list) {
+        if (!Array.isArray(list)) return;
+        var hit = list.some(function (x) { return String((x && x.id) || "").toLowerCase() === dj; });
+        if (hit) addLiveRow(dj);
+      })
+      .catch(function () {});
+  }
+
   function sync() {
     var dj = currentDj();
     if (!dj) return;
@@ -203,6 +251,9 @@
     block.className = "ax-extras";
     block.setAttribute("data-dj", dj);
     host.appendChild(block);
+    var staleLive = document.querySelector(".ax-live-row");
+    if (staleLive && staleLive.getAttribute("data-dj") !== dj) staleLive.remove();
+    checkArtistLive(dj);
     getProfile(dj).then(function (d) {
       if (block.isConnected && block.getAttribute("data-dj") === dj) render(block, dj, d);
     });

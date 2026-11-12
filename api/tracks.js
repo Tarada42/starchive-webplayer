@@ -41,6 +41,26 @@ function dateField(name) {
   return `${String(d).padStart(2,"0")}-${months[mo-1]}-${y} ${String(hh).padStart(2,"0")}:${String(mi).padStart(2,"0")}`;
 }
 
+/**
+ * Is this artist streaming right now? Same signal /api/live uses: the Icecast
+ * status page lists one mount per live DJ (plus an _hq variant).
+ */
+async function isArtistLive(artist) {
+  try {
+    const r = await fetch("https://live.streambox.space/", {
+      headers: { "User-Agent": "starchive-api/1.0" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return false;
+    const html = await r.text();
+    const mounts = [...html.matchAll(/Mountpoint\s*<code>\/([^<]+)<\/code>/gi)].map((m) => m[1].toLowerCase());
+    const target = artist.toLowerCase();
+    return mounts.some((m) => m === target || m === target + "_hq");
+  } catch (e) {
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   const artist = (req.query.artist || "").toString();
   if (!artist) return res.status(400).json({ error: "artist required" });
@@ -76,7 +96,19 @@ export default async function handler(req, res) {
       });
     }
     tracks.sort((a, b) => (b.filename < a.filename ? -1 : b.filename > a.filename ? 1 : 0));
-    res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=86400");
+
+    // A live DJ's newest file is still being written to - it cannot be played, so
+    // never offer it as an archive track. The artist page shows a LIVE entry instead.
+    const live = await isArtistLive(artist);
+    if (live && tracks.length) {
+      tracks.shift();
+      tracks.forEach((t, i) => { t.index = i; });
+    }
+
+    res.setHeader(
+      "Cache-Control",
+      live ? "s-maxage=30, stale-while-revalidate=120" : "s-maxage=600, stale-while-revalidate=86400"
+    );
     res.status(200).json(tracks);
   } catch (e) {
     res.status(502).json({ error: String(e && e.message || e) });
