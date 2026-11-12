@@ -18,6 +18,7 @@ const CACHE_TTL_MS = 60_000;
 const FOLLOWERS_TTL_MS = 60 * 60 * 1_000;
 const cache = new Map(); // dj -> { bio, profile, socials, live, fetchedAt }
 const followersCache = new Map(); // dj -> { value, fetchedAt }
+const inFlight = new Map(); // dj -> Promise<response object>
 
 export const ALLOWED_SOCIAL_KEYS = new Set([
   "x",
@@ -199,43 +200,7 @@ function sanitizeError(e) {
   return msg;
 }
 
-export default async function handler(req, res) {
-  const rawDj = req.query.dj ? String(req.query.dj) : "";
-  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
-
-  if (!isValidDj(rawDj)) {
-    return res.status(400).json({
-      dj: rawDj || null,
-      bio: null,
-      socials: {},
-      profile: { displayName: null, avatar: null, createdAt: null, url: `https://www.twitch.tv/${rawDj || ""}` },
-      live: { isLive: false, title: null, game: null, viewers: null, startedAt: null },
-      followers: null,
-      error: "Invalid dj parameter",
-    });
-  }
-
-  const dj = rawDj.toLowerCase();
-
-  const now = Date.now();
-  const cached = cache.get(dj);
-  if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
-    let followers = getCachedFollowers(dj, now);
-    if (followers === undefined) {
-      followers = await getFollowers(dj);
-      followersCache.set(dj, { value: followers, fetchedAt: now });
-    }
-    return res.status(200).json({
-      dj,
-      bio: cached.bio,
-      socials: cached.socials,
-      profile: cached.profile,
-      live: cached.live,
-      followers,
-      error: null,
-    });
-  }
-
+async function buildProfileResponse(dj, now) {
   let token = null;
   let error = null;
   try {
@@ -284,5 +249,67 @@ export default async function handler(req, res) {
   // Cache even on bio error so a transient Twitch failure doesn't hammer the API.
   cache.set(dj, { bio, profile, socials, live, fetchedAt: now });
 
-  res.status(200).json({ dj, bio, socials, profile, live, followers, error });
+  return { dj, bio, socials, profile, live, followers, error };
+}
+
+export default async function handler(req, res) {
+  const rawDj = req.query.dj ? String(req.query.dj) : "";
+  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=120");
+
+  if (!isValidDj(rawDj)) {
+    return res.status(400).json({
+      dj: rawDj || null,
+      bio: null,
+      socials: {},
+      profile: { displayName: null, avatar: null, createdAt: null, url: `https://www.twitch.tv/${rawDj || ""}` },
+      live: { isLive: false, title: null, game: null, viewers: null, startedAt: null },
+      followers: null,
+      error: "Invalid dj parameter",
+    });
+  }
+
+  const dj = rawDj.toLowerCase();
+
+  const now = Date.now();
+  const cached = cache.get(dj);
+  if (cached && now - cached.fetchedAt < CACHE_TTL_MS) {
+    let followers = getCachedFollowers(dj, now);
+    if (followers === undefined) {
+      followers = await getFollowers(dj);
+      followersCache.set(dj, { value: followers, fetchedAt: now });
+    }
+    return res.status(200).json({
+      dj,
+      bio: cached.bio,
+      socials: cached.socials,
+      profile: cached.profile,
+      live: cached.live,
+      followers,
+      error: null,
+    });
+  }
+
+  const existing = inFlight.get(dj);
+  if (existing) {
+    const result = await existing;
+    return res.status(200).json(result);
+  }
+
+  const promise = buildProfileResponse(dj, now).finally(() => inFlight.delete(dj));
+  inFlight.set(dj, promise);
+
+  try {
+    const result = await promise;
+    return res.status(200).json(result);
+  } catch (e) {
+    return res.status(200).json({
+      dj,
+      bio: null,
+      socials: { twitch: `https://www.twitch.tv/${dj}` },
+      profile: buildProfile(null, dj),
+      live: { isLive: false, title: null, game: null, viewers: null, startedAt: null },
+      followers: null,
+      error: sanitizeError(e),
+    });
+  }
 }

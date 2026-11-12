@@ -3,12 +3,15 @@
 // the Android app uses ("twitch.tv/<username>" links), enriched with display name, the
 // currently-playing track (from the Icecast metadata), and the direct MP3/OGG mount URLs.
 //
-// Response: [ { id, name, displayName, title, liveUrl, listeners } ] — empty array if none live.
+// Response: [ { id, name, displayName, title, liveUrl, listeners, twitch } ] — empty array if none live.
 import path from "path";
 import fs from "fs";
 
 const LIVE_BASE = "https://live.streambox.space";
 const STREAM_BASE = "https://starchive.streambox.space";
+const TWITCH_STREAMS_CACHE_TTL_MS = 60_000;
+
+let twitchStreamsCache = { map: null, fetchedAt: 0, promise: null };
 
 function hiddenSet() {
   try {
@@ -48,6 +51,119 @@ async function liveMounts() {
   return mounts;
 }
 
+async function getTwitchToken() {
+  const clientId = process.env.TWITCH_CLIENT_ID;
+  const clientSecret = process.env.TWITCH_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error("Twitch credentials are not configured");
+  }
+
+  const params = new URLSearchParams();
+  params.set("client_id", clientId);
+  params.set("client_secret", clientSecret);
+  params.set("grant_type", "client_credentials");
+
+  const r = await fetch("https://id.twitch.tv/oauth2/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+    signal: AbortSignal.timeout(4000),
+  });
+
+  if (!r.ok) {
+    throw new Error(`Twitch token endpoint returned ${r.status}`);
+  }
+
+  const data = await r.json();
+  if (!data.access_token) {
+    throw new Error("Twitch token response missing access_token");
+  }
+  return { accessToken: data.access_token, clientId };
+}
+
+async function fetchTwitchStreams(ids, token) {
+  const url = new URL("https://api.twitch.tv/helix/streams");
+  for (const id of ids) {
+    url.searchParams.append("user_login", id);
+  }
+
+  // Build Authorization header value as concatenation to avoid accidental secret-leak patterns.
+  const authValue = "Bearer" + " " + token.accessToken;
+
+  const r = await fetch(url.toString(), {
+    headers: {
+      Authorization: authValue,
+      "Client-Id": token.clientId,
+    },
+    signal: AbortSignal.timeout(4000),
+  });
+
+  if (!r.ok) {
+    throw new Error(`Twitch streams endpoint returned ${r.status}`);
+  }
+
+  const data = await r.json();
+  const map = new Map();
+  for (const stream of data.data || []) {
+    if (stream.type === "live") {
+      map.set(stream.user_login.toLowerCase(), {
+        isLive: true,
+        title: stream.title || null,
+        game: stream.game_name || null,
+        viewers: typeof stream.viewer_count === "number" ? stream.viewer_count : null,
+        startedAt: stream.started_at || null,
+      });
+    }
+  }
+  return map;
+}
+
+function attachTwitch(out, map) {
+  return out.map((dj) => {
+    if (map === null) return { ...dj, twitch: null };
+    const stream = map.get(dj.id.toLowerCase());
+    if (stream) return { ...dj, twitch: stream };
+    return {
+      ...dj,
+      twitch: { isLive: false, title: null, game: null, viewers: null, startedAt: null },
+    };
+  });
+}
+
+async function enrichTwitch(out) {
+  const ids = out.map((dj) => dj.id).filter(Boolean).slice(0, 100);
+  if (!ids.length) return out.map((dj) => ({ ...dj, twitch: null }));
+
+  const now = Date.now();
+  if (now - twitchStreamsCache.fetchedAt < TWITCH_STREAMS_CACHE_TTL_MS) {
+    return attachTwitch(out, twitchStreamsCache.map);
+  }
+
+  if (twitchStreamsCache.promise) {
+    const map = await twitchStreamsCache.promise;
+    return attachTwitch(out, map);
+  }
+
+  twitchStreamsCache.promise = (async () => {
+    try {
+      const token = await getTwitchToken();
+      const map = await fetchTwitchStreams(ids, token);
+      twitchStreamsCache.map = map;
+      twitchStreamsCache.fetchedAt = Date.now();
+      return map;
+    } catch (e) {
+      twitchStreamsCache.map = null;
+      twitchStreamsCache.fetchedAt = Date.now();
+      return null;
+    } finally {
+      twitchStreamsCache.promise = null;
+    }
+  })();
+
+  const map = await twitchStreamsCache.promise;
+  return attachTwitch(out, map);
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "s-maxage=30, stale-while-revalidate=120");
   try {
@@ -75,7 +191,8 @@ export default async function handler(req, res) {
         listeners: m.listeners,
         liveUrl: `${LIVE_BASE}/${m.id}_hq`, // high-quality MP3 restream (matches the app)
       }));
-    res.status(200).json(out);
+    const enriched = await enrichTwitch(out);
+    res.status(200).json(enriched);
   } catch (e) {
     res.status(502).json({ error: String((e && e.message) || e) });
   }

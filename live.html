@@ -119,7 +119,14 @@
         border: 1px solid var(--border);
       }
       .info { flex: 1; min-width: 0; }
-      .name { font-family: "Syne", sans-serif; font-weight: 700; font-size: 1.15rem; margin: 0 0 4px; }
+      .name {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.15rem;
+        margin: 0 0 4px;
+        cursor: pointer;
+      }
+      .name:hover { color: var(--accent2); }
       .title {
         color: var(--text2);
         font-size: 0.95rem;
@@ -128,7 +135,13 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      .listeners { color: var(--text3); font-size: 0.8rem; margin-bottom: 12px; }
+      .listeners { color: var(--text3); font-size: 0.8rem; margin-bottom: 4px; }
+      .twitch-stats {
+        color: var(--text3);
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+        min-height: 1.2em;
+      }
       .open-external {
         display: inline-block;
         margin-top: 10px;
@@ -146,9 +159,115 @@
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .error { color: var(--red); }
       .loading { color: var(--text2); padding: 40px 0; text-align: center; }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 100;
+      }
+      .modal-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 520px;
+        max-height: 85vh;
+        overflow: auto;
+        padding: 24px;
+        position: relative;
+      }
+      .modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text2);
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        font-size: 1.4rem;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .modal-close:hover { color: var(--text); border-color: var(--accent); }
+      .modal-header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      .modal-avatar, .modal-avatar-fallback {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: var(--surface3);
+        border: 1px solid var(--border);
+      }
+      .modal-avatar-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text2);
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.8rem;
+      }
+      .modal-title-wrap { flex: 1; min-width: 0; }
+      .modal-name-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .modal-name {
+        font-family: "Syne", sans-serif;
+        font-weight: 700;
+        font-size: 1.4rem;
+        margin: 0;
+      }
+      .modal-live-badge {
+        background: var(--red);
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+        letter-spacing: 0.03em;
+      }
+      .modal-bio {
+        color: var(--text);
+        margin: 0 0 16px;
+        line-height: 1.6;
+      }
+      .modal-bio-empty {
+        color: var(--text3);
+        font-style: italic;
+      }
+      .modal-stats {
+        color: var(--text2);
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .modal-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
       @media (max-width: 560px) {
         .dj-card { flex-direction: column; align-items: stretch; }
         .avatar, .avatar-fallback { width: 100%; height: 120px; border-radius: 12px; }
+        .modal-backdrop { padding: 16px; }
+        .modal-header { flex-direction: column; align-items: flex-start; }
       }
     </style>
   </head>
@@ -168,9 +287,14 @@
 
     <script>
       const REFRESH_MS = 30000;
+      const MODAL_REFRESH_MS = 60000;
       const listEl = document.getElementById("live-list");
       const statusEl = document.getElementById("status");
       let lastIds = [];
+      let modalEl = null;
+      let modalCurrentDj = null;
+      let modalRefreshTimer = null;
+      let modalTrigger = null;
 
       function setStatus(text, live) {
         statusEl.innerHTML = live !== false
@@ -186,9 +310,44 @@
         return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
       }
 
+      function buildTwitchViewersText(twitch) {
+        if (!twitch || twitch.isLive !== true) return null;
+        const viewersPart = typeof twitch.viewers === "number" ? "Twitch Viewers: " + twitch.viewers : "";
+        const gamePart = twitch.game ? escapeHtml(twitch.game) : "";
+        if (viewersPart && gamePart) return viewersPart + " - " + gamePart;
+        if (viewersPart) return viewersPart;
+        if (gamePart) return gamePart;
+        return null;
+      }
+
+      function updateTwitchStats(el, twitch) {
+        const text = buildTwitchViewersText(twitch);
+        if (text) {
+          el.textContent = text;
+          el.style.display = "";
+        } else {
+          el.textContent = "";
+          el.style.display = "none";
+        }
+      }
+
+      function formatUptime(startedAt) {
+        if (!startedAt) return null;
+        const start = new Date(startedAt);
+        if (Number.isNaN(start.getTime())) return null;
+        const diffMs = Date.now() - start.getTime();
+        if (diffMs < 0) return null;
+        const hours = Math.floor(diffMs / 3600000);
+        const minutes = Math.floor((diffMs % 3600000) / 60000);
+        if (hours === 0) return minutes + "m";
+        return hours + "h " + minutes + "m";
+      }
+
       function createCard(dj, avatarUrl) {
         const card = document.createElement("article");
         card.className = "dj-card";
+        card.dataset.djId = dj.id;
+
         const img = document.createElement("img");
         img.className = "avatar";
         img.alt = "";
@@ -208,10 +367,17 @@
         const info = document.createElement("div");
         info.className = "info";
         info.innerHTML = `
-          <h2 class="name">${escapeHtml(dj.displayName || dj.name)}</h2>
+          <h2 class="name" role="button" tabindex="0">${escapeHtml(dj.displayName || dj.name)}</h2>
           <p class="title" title="${escapeHtml(dj.title || "")}">${dj.title ? "Now playing: " + escapeHtml(dj.title) : "Live stream"}</p>
           <div class="listeners">${dj.listeners || 0} listener${(dj.listeners || 0) === 1 ? "" : "s"}</div>
         `;
+
+        const stats = document.createElement("div");
+        stats.className = "twitch-stats";
+        stats.style.display = "none";
+        updateTwitchStats(stats, dj.twitch);
+        info.appendChild(stats);
+
         const audio = document.createElement("audio");
         audio.controls = true;
         audio.preload = "none";
@@ -255,6 +421,15 @@
         }
       }
 
+      function updateCard(card, dj) {
+        const title = card.querySelector(".title");
+        const listeners = card.querySelector(".listeners");
+        const stats = card.querySelector(".twitch-stats");
+        if (title && dj.title) title.textContent = "Now playing: " + escapeHtml(dj.title);
+        if (listeners) listeners.textContent = (dj.listeners || 0) + " listener" + ((dj.listeners || 0) === 1 ? "" : "s");
+        if (stats) updateTwitchStats(stats, dj.twitch);
+      }
+
       async function render(djs) {
         if (!djs || !djs.length) {
           listEl.innerHTML = '<div class="empty">No DJs are live right now.<br>Check back later or browse the <a href="/" style="color:var(--accent2);text-decoration:underline">archive</a>.</div>';
@@ -270,10 +445,7 @@
           djs.forEach((dj, i) => {
             const card = cards[i];
             if (!card) return;
-            const title = card.querySelector(".title");
-            const listeners = card.querySelector(".listeners");
-            if (title && dj.title) title.textContent = "Now playing: " + escapeHtml(dj.title);
-            if (listeners) listeners.textContent = (dj.listeners || 0) + " listener" + ((dj.listeners || 0) === 1 ? "" : "s");
+            updateCard(card, dj);
           });
           setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
           return;
@@ -300,6 +472,204 @@
           lastIds = [];
         }
       }
+
+      function createModal() {
+        const backdrop = document.createElement("div");
+        backdrop.className = "modal-backdrop";
+        backdrop.style.display = "none";
+        backdrop.setAttribute("role", "dialog");
+        backdrop.setAttribute("aria-modal", "true");
+
+        const panel = document.createElement("div");
+        panel.className = "modal-panel";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "modal-close";
+        closeBtn.setAttribute("aria-label", "Close");
+        closeBtn.innerHTML = "&times;";
+        closeBtn.addEventListener("click", closeModal);
+
+        const header = document.createElement("div");
+        header.className = "modal-header";
+
+        const avatarImg = document.createElement("img");
+        avatarImg.className = "modal-avatar";
+        avatarImg.alt = "";
+
+        const avatarFallback = document.createElement("div");
+        avatarFallback.className = "modal-avatar-fallback";
+
+        const titleWrap = document.createElement("div");
+        titleWrap.className = "modal-title-wrap";
+
+        const nameRow = document.createElement("div");
+        nameRow.className = "modal-name-row";
+
+        const nameEl = document.createElement("h2");
+        nameEl.className = "modal-name";
+
+        const liveBadge = document.createElement("span");
+        liveBadge.className = "modal-live-badge";
+        liveBadge.textContent = "LIVE";
+
+        nameRow.appendChild(nameEl);
+        nameRow.appendChild(liveBadge);
+        titleWrap.appendChild(nameRow);
+        header.appendChild(avatarImg);
+        header.appendChild(avatarFallback);
+        header.appendChild(titleWrap);
+
+        const bioEl = document.createElement("p");
+        bioEl.className = "modal-bio";
+
+        const statsEl = document.createElement("div");
+        statsEl.className = "modal-stats";
+
+        const linksEl = document.createElement("div");
+        linksEl.className = "modal-links";
+
+        panel.appendChild(closeBtn);
+        panel.appendChild(header);
+        panel.appendChild(bioEl);
+        panel.appendChild(statsEl);
+        panel.appendChild(linksEl);
+        backdrop.appendChild(panel);
+
+        backdrop.addEventListener("click", (e) => {
+          if (e.target === backdrop) closeModal();
+        });
+
+        document.body.appendChild(backdrop);
+        return { backdrop, closeBtn, avatarImg, avatarFallback, nameEl, liveBadge, bioEl, statsEl, linksEl };
+      }
+
+      function updateModal(data) {
+        if (!modalEl || modalCurrentDj !== data.dj) return;
+        const profile = data.profile || {};
+        const live = data.live || {};
+        const displayName = profile.displayName || data.dj;
+
+        modalEl.backdrop.setAttribute("aria-label", displayName);
+        modalEl.nameEl.textContent = displayName;
+
+        if (profile.avatar) {
+          modalEl.avatarImg.src = profile.avatar;
+          modalEl.avatarImg.style.display = "";
+          modalEl.avatarFallback.style.display = "none";
+        } else {
+          modalEl.avatarImg.style.display = "none";
+          modalEl.avatarFallback.textContent = initials(displayName);
+          modalEl.avatarFallback.style.display = "";
+        }
+
+        modalEl.liveBadge.style.display = live.isLive ? "" : "none";
+
+        if (data.bio) {
+          modalEl.bioEl.textContent = data.bio;
+          modalEl.bioEl.classList.remove("modal-bio-empty");
+        } else {
+          modalEl.bioEl.textContent = "No bio.";
+          modalEl.bioEl.classList.add("modal-bio-empty");
+        }
+
+        modalEl.statsEl.innerHTML = "";
+        const viewersText = buildTwitchViewersText(live);
+        if (viewersText) {
+          const div = document.createElement("div");
+          div.textContent = viewersText;
+          modalEl.statsEl.appendChild(div);
+        }
+        if (typeof data.followers === "number") {
+          const div = document.createElement("div");
+          div.textContent = "Followers: " + new Intl.NumberFormat("en-US").format(data.followers);
+          modalEl.statsEl.appendChild(div);
+        }
+        const uptime = formatUptime(live.startedAt);
+        if (uptime) {
+          const div = document.createElement("div");
+          div.textContent = "Live for " + uptime;
+          modalEl.statsEl.appendChild(div);
+        }
+
+        modalEl.linksEl.innerHTML = "";
+        const twitchUrl = profile.url || (data.socials && data.socials.twitch) || "https://www.twitch.tv/" + encodeURIComponent(data.dj);
+        const twitchLink = document.createElement("a");
+        twitchLink.className = "open-external";
+        twitchLink.textContent = "Watch on Twitch";
+        twitchLink.href = twitchUrl;
+        twitchLink.target = "_blank";
+        twitchLink.rel = "noopener noreferrer";
+        modalEl.linksEl.appendChild(twitchLink);
+
+        const m3uLink = document.createElement("a");
+        m3uLink.className = "open-external";
+        m3uLink.textContent = "Open in local app";
+        m3uLink.href = "/stream/" + encodeURIComponent(data.dj) + ".m3u";
+        m3uLink.target = "_blank";
+        m3uLink.rel = "noopener noreferrer";
+        modalEl.linksEl.appendChild(m3uLink);
+      }
+
+      async function loadModalData(djId) {
+        try {
+          const r = await fetch("/api/dj-profile?dj=" + encodeURIComponent(djId));
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          const data = await r.json();
+          if (modalCurrentDj === djId) updateModal(data);
+        } catch (e) {
+          // Silently ignore modal refresh failures; stale data remains visible.
+        }
+      }
+
+      async function openModal(djId) {
+        if (!modalEl) modalEl = createModal();
+        clearInterval(modalRefreshTimer);
+        modalRefreshTimer = null;
+        modalCurrentDj = djId;
+        modalTrigger = document.activeElement;
+        modalEl.backdrop.style.display = "";
+        document.body.style.overflow = "hidden";
+        modalEl.closeBtn.focus();
+        await loadModalData(djId);
+        modalRefreshTimer = setInterval(() => {
+          if (modalCurrentDj) loadModalData(modalCurrentDj);
+        }, MODAL_REFRESH_MS);
+      }
+
+      function closeModal() {
+        if (!modalEl) return;
+        clearInterval(modalRefreshTimer);
+        modalRefreshTimer = null;
+        modalCurrentDj = null;
+        modalEl.backdrop.style.display = "none";
+        document.body.style.overflow = "";
+        if (modalTrigger) {
+          modalTrigger.focus();
+          modalTrigger = null;
+        }
+      }
+
+      listEl.addEventListener("click", (e) => {
+        const name = e.target.closest(".dj-card .name");
+        if (!name) return;
+        const card = name.closest(".dj-card");
+        if (card && card.dataset.djId) openModal(card.dataset.djId);
+      });
+
+      listEl.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const name = e.target.closest(".dj-card .name");
+        if (!name) return;
+        e.preventDefault();
+        const card = name.closest(".dj-card");
+        if (card && card.dataset.djId) openModal(card.dataset.djId);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modalEl && modalEl.backdrop.style.display !== "none") closeModal();
+      });
+
+      window.addEventListener("beforeunload", closeModal);
 
       load();
       setInterval(load, REFRESH_MS);
