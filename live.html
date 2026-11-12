@@ -622,8 +622,8 @@
           existing.set(card.getAttribute("data-dj-id"), card);
         });
 
-        // Drop the empty/joke view if it is still mounted.
-        listEl.querySelectorAll(".empty").forEach(el => el.remove());
+        // Drop the empty/joke or initial-loading view if it is still mounted.
+        listEl.querySelectorAll(".empty, .loading").forEach(el => el.remove());
 
         // Remove cards for DJs that are no longer live.
         existing.forEach((card, id) => {
