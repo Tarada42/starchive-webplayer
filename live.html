@@ -613,25 +613,34 @@
         }
         emptyShown = false;
 
-        const ids = djs.map(d => d.id).join(",");
-        if (lastIds.join(",") === ids) {
-          // Same DJs — update metadata in place so audio keeps playing.
-          const cards = listEl.querySelectorAll(".dj-card");
-          djs.forEach((dj, i) => {
-            const card = cards[i];
-            if (!card) return;
-            updateCard(card, dj);
-          });
-          setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
-          return;
-        }
+        // Never wipe the list: destroying a card also destroys its <audio> element and
+        // would cut off anyone listening. Update existing cards in place, remove only
+        // the DJs that went offline, and append the newcomers.
+        const liveIds = djs.map(d => d.id);
+        const existing = new Map();
+        listEl.querySelectorAll(".dj-card").forEach(card => {
+          existing.set(card.getAttribute("data-dj-id"), card);
+        });
 
-        listEl.innerHTML = "";
+        // Drop the empty/joke view if it is still mounted.
+        listEl.querySelectorAll(".empty").forEach(el => el.remove());
+
+        // Remove cards for DJs that are no longer live.
+        existing.forEach((card, id) => {
+          if (!liveIds.includes(id)) card.remove();
+        });
+
         for (const dj of djs) {
+          const card = existing.get(dj.id);
+          if (card) {
+            updateCard(card, dj);   // metadata + Twitch viewers only; audio untouched
+            continue;
+          }
           const avatar = await fetchAvatar(dj.id);
           listEl.appendChild(createCard(dj, avatar));
         }
-        lastIds = djs.map(d => d.id);
+
+        lastIds = liveIds;
         setStatus(djs.length + " DJ" + (djs.length === 1 ? "" : "s") + " live");
       }
 
