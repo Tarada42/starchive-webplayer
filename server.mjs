@@ -11,18 +11,182 @@ import tracks from "./api/tracks.js";
 import thumbnails from "./api/artist-thumbnails.js";
 import live from "./api/live.js";
 import djProfile, { ALLOWED_SOCIAL_KEYS } from "./api/dj-profile.js";
+import { createAdminApp } from "./admin/server.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
+const ADMIN_PORT = process.env.ADMIN_PORT;
+const DATA_DIR = process.env.DJ_SOCIALS_PATH
+  ? path.dirname(path.resolve(process.env.DJ_SOCIALS_PATH))
+  : path.join(__dirname, "data");
 const app = express();
 
-// JSON + basic logging
-app.use(express.json());
+// Metrics aggregation: {minute, kind, bytes, count}
+const metrics = new Map();
+const METRICS_FLUSH_MS = 60_000;
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getKind(req) {
+  const p = req.path || "";
+  if (p.startsWith("/api/")) return "api";
+  if (p.startsWith("/stream/")) return "stream";
+  if (req.method === "GET" && /\/[^/]+\.[^/]+$/.test(p)) return "static";
+  return "page";
+}
+
+function recordMetric(kind, bytes) {
+  if (!bytes || bytes <= 0) return;
+  const minute = new Date().toISOString().slice(0, 16); // YYYY-MM-DDTHH:mm
+  const key = `${minute}:${kind}`;
+  const entry = metrics.get(key);
+  if (entry) {
+    entry.bytes += bytes;
+    entry.count += 1;
+  } else {
+    metrics.set(key, { minute, kind, bytes, count: 1 });
+  }
+}
+
+function flushMetrics() {
+  if (metrics.size === 0) return;
+  const dir = path.join(DATA_DIR, "metrics");
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `${todayStr()}.ndjson`);
+  const lines = [];
+  for (const entry of metrics.values()) {
+    lines.push(JSON.stringify(entry));
+  }
+  fs.appendFileSync(file, lines.join("\n") + "\n");
+  metrics.clear();
+}
+
+setInterval(flushMetrics, METRICS_FLUSH_MS);
+process.on("SIGTERM", flushMetrics);
+
+// Byte-counting middleware: count every byte written by the response.
+// Does not buffer; safe for the long-lived /stream proxy.
+app.use((req, res, next) => {
+  const kind = getKind(req);
+  let contentLength = null;
+  const origWrite = res.write.bind(res);
+  const origEnd = res.end.bind(res);
+  const origSetHeader = res.setHeader.bind(res);
+
+  res.setHeader = (name, value) => {
+    if (String(name).toLowerCase() === "content-length") {
+      const n = Number(value);
+      if (Number.isFinite(n)) contentLength = n;
+    }
+    return origSetHeader(name, value);
+  };
+
+  let wrote = false;
+  res.write = function (chunk, encoding, callback) {
+    if (typeof encoding === "function") { callback = encoding; encoding = undefined; }
+    if (chunk) {
+      wrote = true;
+      recordMetric(kind, Buffer.byteLength(chunk, encoding));
+    }
+    return origWrite(chunk, encoding, callback);
+  };
+
+  res.end = function (chunk, encoding, callback) {
+    if (typeof chunk === "function") { callback = chunk; chunk = undefined; }
+    if (typeof encoding === "function") { callback = encoding; encoding = undefined; }
+    if (chunk) {
+      wrote = true;
+      recordMetric(kind, Buffer.byteLength(chunk, encoding));
+    } else if (!wrote && contentLength !== null) {
+      recordMetric(kind, contentLength);
+    }
+    return origEnd(chunk, encoding, callback);
+  };
+
+  next();
+});
+
+// JSON + basic logging. /api/events is parsed by its own 2 kB parser below, so the
+// global (100 kB) parser skips it — otherwise the small cap never applies.
+const globalJson = express.json();
+app.use((req, res, next) => {
+  // Mirror Express routing (case-insensitive, optional trailing slash) so no variant
+  // reaches the global 100 kB parser before the route's own 2 kB one.
+  const p = req.path.toLowerCase().replace(/\/+$/, "");
+  if (p === "/api/events") return next();
+  return globalJson(req, res, next);
+});
 app.use((req, _res, next) => {
   const t = new Date().toISOString();
   console.log(`[${t}] ${req.method} ${req.originalUrl}`);
   next();
 });
+
+// Event ingestion endpoint (public, unauthenticated, rate-limited).
+const eventLimiters = new Map(); // ip -> { count, resetAt }
+
+function sanitizeEventString(s) {
+  if (s == null) return "";
+  const t = String(s).slice(0, 100);
+  return t.replace(/[^a-zA-Z0-9_\-./]/g, "");
+}
+
+function getClientIp(req) {
+  return (
+    req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+    req.socket?.remoteAddress ||
+    "unknown"
+  );
+}
+
+function checkEventRateLimit(ip) {
+  const now = Date.now();
+  const windowMs = 60_000;
+  const record = eventLimiters.get(ip);
+  if (record && now > record.resetAt) {
+    eventLimiters.delete(ip);
+  }
+  const current = eventLimiters.get(ip) || { count: 0, resetAt: now + windowMs };
+  if (current.count >= 60) return false;
+  current.count += 1;
+  eventLimiters.set(ip, current);
+  return true;
+}
+
+app.post(
+  "/api/events",
+  express.json({ limit: "2kb" }),
+  (req, res) => {
+    const ip = getClientIp(req);
+    if (!checkEventRateLimit(ip)) {
+      return res.status(429).json({ error: "Rate limit exceeded" });
+    }
+
+    const body = req.body || {};
+    const allowedTypes = new Set(["play", "favorite", "unfavorite", "live_play", "page"]);
+    const type = allowedTypes.has(body.type) ? body.type : null;
+    if (!type) {
+      return res.status(400).json({ error: "Invalid event type" });
+    }
+
+    const event = {
+      type,
+      artist: sanitizeEventString(body.artist),
+      track: sanitizeEventString(body.track),
+      sid: sanitizeEventString(body.sid),
+      ts: new Date().toISOString(),
+    };
+
+    const dir = path.join(DATA_DIR, "events");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `${todayStr()}.ndjson`);
+    fs.appendFileSync(file, JSON.stringify(event) + "\n");
+
+    return res.status(204).end();
+  }
+);
 
 // Admin routes for DJ socials editor (auth + rate-limiting handled by proxy).
 // These must be defined before the SPA fallback and static catch-all.
@@ -147,6 +311,21 @@ app.get("/coliflower", (_req, res) => {
 });
 
 // Static files
+// The admin app lives in admin/ and must ONLY be served by the separate admin
+// listener (ADMIN_PORT). Block it on the public port before the static handler.
+app.use((req, res, next) => {
+  let p = req.path;
+  try {
+    p = decodeURIComponent(p);
+  } catch (e) {
+    return res.status(400).type("text/plain").send("Bad request");
+  }
+  p = p.replace(/\\/g, "/").replace(/\/{2,}/g, "/").toLowerCase();
+  const isAdminUi = p === "/admin" || p.startsWith("/admin/") || /^\/assets\/admin\.(js|css)$/.test(p);
+  if (isAdminUi) return res.status(404).type("text/plain").send("Not found");
+  next();
+});
+
 app.use(express.static(__dirname, { index: "index.html" }));
 
 // API routes (Express adapter for the Vercel-style handlers)
@@ -233,3 +412,11 @@ process.chdir(__dirname);
 app.listen(PORT, () => {
   console.log(`STArchive webapp-copy serving on :${PORT} (cwd=${process.cwd()})`);
 });
+
+// Admin listener on its own port (loopback-published only in production).
+if (ADMIN_PORT) {
+  const adminApp = createAdminApp({ dataDir: DATA_DIR });
+  adminApp.listen(Number(ADMIN_PORT), "0.0.0.0", () => {
+    console.log(`STArchive admin serving on :${ADMIN_PORT}`);
+  });
+}

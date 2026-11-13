@@ -8,3 +8,6 @@ core
 dist/
 .next/
 *.log
+
+# Runtime data: admin users (password hashes), events, metrics. Never commit.
+data/

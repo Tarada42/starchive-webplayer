@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>STArchive Admin</title>
+  <link rel="stylesheet" href="/assets/admin.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="logo-mark">ST</span>
+        <span class="logo-text">STArchive Admin</span>
+      </div>
+      <nav class="nav" id="nav" aria-label="Admin navigation">
+        <a href="#/overview" class="nav-link active" data-route="overview">
+          <span class="nav-icon" aria-hidden="true">▣</span> Overview
+        </a>
+        <a href="#/popularity" class="nav-link" data-route="popularity">
+          <span class="nav-icon" aria-hidden="true">♥</span> Popularity
+        </a>
+        <a href="#/live" class="nav-link" data-route="live">
+          <span class="nav-icon" aria-hidden="true">◉</span> Live
+        </a>
+        <a href="#/traffic" class="nav-link" data-route="traffic">
+          <span class="nav-icon" aria-hidden="true">↗</span> Traffic
+        </a>
+        <a href="#/content" class="nav-link" data-route="content">
+          <span class="nav-icon" aria-hidden="true">☰</span> Content
+        </a>
+        <a href="#/system" class="nav-link" data-route="system">
+          <span class="nav-icon" aria-hidden="true">⚙</span> System
+        </a>
+      </nav>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    </aside>
+
+    <main class="main" id="main">
+      <header class="header">
+        <h1 class="page-title" id="page-title">Overview</h1>
+        <div class="header-actions" id="header-actions">
+          <span class="user-pill" id="user-pill"></span>
+          <form id="logout-form" method="POST" action="/logout">
+            <input type="hidden" id="logout-csrf" name="csrf" />
+            <button type="submit" class="btn btn-secondary">Logout</button>
+          </form>
+        </div>
+      </header>
+
+      <section class="page" id="page-overview">
+        <div class="stat-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Artists</span>
+            <span class="stat-value" id="stat-artists">—</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Live now</span>
+            <span class="stat-value" id="stat-live">—</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Plays today</span>
+            <span class="stat-value" id="stat-plays">—</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Favourites today</span>
+            <span class="stat-value" id="stat-favourites">—</span>
+          </article>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Live now</h2>
+          <ul class="live-list" id="live-list">
+            <li class="empty">No DJs are live right now.</li>
+          </ul>
+        </div>
+
+        <p class="collection-meta" id="collection-meta">Data collection started —</p>
+      </section>
+
+      <section class="page hidden" id="page-popularity">
+        <div class="card empty-state">
+          <h2 class="card-title">Popularity</h2>
+          <p>Most-played artists and tracks, plus favourite trends. Coming in phase 2.</p>
+        </div>
+      </section>
+
+      <section class="page hidden" id="page-live">
+        <div class="card empty-state">
+          <h2 class="card-title">Live</h2>
+          <p>Live listener graphs, mount health, and stream history. Coming in phase 2.</p>
+        </div>
+      </section>
+
+      <section class="page hidden" id="page-traffic">
+        <div class="card empty-state">
+          <h2 class="card-title">Traffic</h2>
+          <p>Bandwidth usage, endpoint breakdown, and request counts. Coming in phase 3.</p>
+        </div>
+      </section>
+
+      <section class="page hidden" id="page-content">
+        <div class="card empty-state">
+          <h2 class="card-title">Content</h2>
+          <p>Artist metadata, social links, and thumbnail management. Coming in phase 3.</p>
+        </div>
+      </section>
+
+      <section class="page hidden" id="page-system">
+        <div class="card empty-state">
+          <h2 class="card-title">System</h2>
+          <p>Logs, environment, and admin user management. Coming in phase 3.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="login-overlay hidden" id="login-overlay">
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="logo-mark">ST</span>
+        <h1>STArchive Admin</h1>
+      </div>
+      <form id="login-form" class="login-form" novalidate>
+        <label for="login-user">User</label>
+        <input id="login-user" name="user" type="text" autocomplete="username" required />
+        <label for="login-password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required />
+        <p class="login-error" id="login-error" role="alert"></p>
+        <button type="submit" class="btn btn-primary">Sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/admin.js" type="module"></script>
+</body>
+</html>

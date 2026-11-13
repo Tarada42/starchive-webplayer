@@ -5,7 +5,8 @@
 # This file defines only the webapp container that actually serves the site.
 #
 # Values come from /docker/starchive-webapp/.env (never commit secrets):
-#   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, COLIFLOWER_USERS
+#   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, COLIFLOWER_USERS, ADMIN_USER,
+#   ADMIN_PASSWORD, SESSION_SECRET
 
 services:
   webapp:
@@ -17,9 +18,16 @@ services:
       - TWITCH_CLIENT_ID=${TWITCH_CLIENT_ID}
       - TWITCH_CLIENT_SECRET=${TWITCH_CLIENT_SECRET}
       - DJ_SOCIALS_PATH=/app/data/dj-socials.json
+      - ADMIN_PORT=8081
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SESSION_SECRET=${SESSION_SECRET}
     volumes:
       # Persistent, admin-editable data (dj-socials.json written by the /coliflower editor).
       - ./data:/app/data
+    ports:
+      # Admin site is published to host loopback only; Cloudflare Tunnel forwards to it.
+      - "127.0.0.1:8081:8081"
     labels:
       - "traefik.enable=true"
 
