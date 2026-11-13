@@ -367,6 +367,30 @@
         return hours + "h " + minutes + "m";
       }
 
+      // Twitch chat. Wide screens get a sized popup window that sits beside the
+      // player (the stream keeps playing); narrow screens open a normal tab.
+      // The popout page sends X-Frame-Options: SAMEORIGIN, so it can never be iframed.
+      function twitchChatUrl(dj) {
+        return "https://www.twitch.tv/popout/" + encodeURIComponent(dj) + "/chat/";
+      }
+
+      function openTwitchChat(dj, ev) {
+        const url = twitchChatUrl(dj);
+        if (window.matchMedia("(min-width: 900px)").matches) {
+          const win = window.open(
+            url,
+            "twitch_chat_" + dj,
+            "popup=yes,width=420,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes"
+          );
+          if (win) {
+            if (ev) ev.preventDefault();
+            try { win.focus(); } catch (e) {}
+            return;
+          }
+        }
+        // narrow screen, or popup blocked: let the anchor open a tab
+      }
+
       function createCard(dj, avatarUrl) {
         const card = document.createElement("article");
         card.className = "dj-card";
@@ -426,10 +450,21 @@
         twitch.rel = "noopener noreferrer";
 
         // Both links sit side by side to keep the card compact.
+        // Chat opens a popup on desktop so the stream keeps playing while typing.
+        const chat = document.createElement("a");
+        chat.className = "open-external watch-twitch";
+        chat.textContent = "Chat";
+        chat.href = twitchChatUrl(dj.id);
+        chat.target = "_blank";
+        chat.rel = "noopener noreferrer";
+        chat.title = "Open Twitch chat for " + dj.id;
+        chat.addEventListener("click", function (e) { openTwitchChat(dj.id, e); });
+
         const actions = document.createElement("div");
         actions.className = "card-actions";
         actions.appendChild(ext);
         actions.appendChild(twitch);
+        actions.appendChild(chat);
         info.appendChild(actions);
 
         card.appendChild(img);
@@ -803,6 +838,15 @@
         twitchLink.target = "_blank";
         twitchLink.rel = "noopener noreferrer";
         modalEl.linksEl.appendChild(twitchLink);
+
+        const chatLink = document.createElement("a");
+        chatLink.className = "open-external watch-twitch";
+        chatLink.textContent = "Chat";
+        chatLink.href = twitchChatUrl(data.dj);
+        chatLink.target = "_blank";
+        chatLink.rel = "noopener noreferrer";
+        chatLink.addEventListener("click", function (e) { openTwitchChat(data.dj, e); });
+        modalEl.linksEl.appendChild(chatLink);
 
         const m3uLink = document.createElement("a");
         m3uLink.className = "open-external";
