@@ -1,0 +1,4 @@
+{
+  "_comment": "Manual genre overrides — win over Twitch tags. Keys are lowercased artist ids as used in the archive. Example: \"jiltedhybrid\": [\"Trance\", \"Progressive House\"]",
+  "overrides": {}
+}

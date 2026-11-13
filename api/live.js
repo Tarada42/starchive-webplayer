@@ -24,6 +24,19 @@ function hiddenSet() {
   return new Set();
 }
 
+// Non-music streamers (gamers, IRL) are hidden from the LIVE surfaces only — they keep
+// their archive entries. Configured in live-excluded.json.
+function liveExcludedSet() {
+  try {
+    const p = path.join(process.cwd(), "live-excluded.json");
+    if (fs.existsSync(p)) {
+      const d = JSON.parse(fs.readFileSync(p, "utf8"));
+      return new Set((d.excluded || []).map((s) => String(s).toLowerCase()));
+    }
+  } catch (e) {}
+  return new Set();
+}
+
 // Icecast serves titles HTML-escaped ("Beers&amp;Beatz"). Decode once here so every
 // consumer gets the real text; clients then escape it for display as usual.
 function decodeEntities(input) {
@@ -186,6 +199,7 @@ export default async function handler(req, res) {
   try {
     const mounts = await liveMounts();
     const hide = hiddenSet();
+    const liveExcluded = liveExcludedSet();
     // Icecast exposes both the base OGG mount (/poddersdj) and the _hq MP3 variant
     // (/poddersdj_hq). Dedupe: prefer the base id, keep the higher-quality _hq stream URL,
     // and merge metadata from whichever mount reports a playing title.
@@ -199,6 +213,7 @@ export default async function handler(req, res) {
     }
     const out = [...merged.values()]
       .filter((m) => !hide.has(m.id))
+      .filter((m) => !liveExcluded.has(String(m.id).toLowerCase()))
       .sort((a, b) => b.listeners - a.listeners)
       .map((m) => ({
         id: m.id,

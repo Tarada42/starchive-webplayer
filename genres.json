@@ -1,0 +1,1401 @@
+{
+ "generatedAt": "2026-11-13T16:05:48.590154Z",
+ "artists": {
+  "adamrackham": {
+   "genres": [
+    "Techno",
+    "Trance",
+    "Breaks"
+   ],
+   "scores": {
+    "Techno": 3,
+    "Trance": 3,
+    "Breaks": 2
+   },
+   "game": "Music",
+   "tags": [
+    "Techno",
+    "Trance",
+    "DJ",
+    "Breaks",
+    "HappyHardcore",
+    "UKHardcore",
+    "HandsUp",
+    "English",
+    "DanceMusic",
+    "ElectronicMusic"
+   ],
+   "source": "twitch-tags"
+  },
+  "andy_gravity": {
+   "genres": [
+    "Drum & Bass",
+    "Breaks"
+   ],
+   "scores": {
+    "Drum & Bass": 3,
+    "Breaks": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "drumandbass",
+    "ElectronicMusic",
+    "TwitchDJs",
+    "Luquid",
+    "English",
+    "breaks",
+    "ADHDStreamer",
+    "FunnyVibez",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "baylightbrew": {
+   "genres": [
+    "Trance",
+    "House"
+   ],
+   "scores": {
+    "Trance": 3,
+    "House": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "Trance",
+    "House",
+    "\uff56\uff49\uff42\uff45\uff53",
+    "Progressive",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "blaugrana": {
+   "genres": [
+    "Trance",
+    "Techno",
+    "Uplifting Trance"
+   ],
+   "scores": {
+    "Trance": 2,
+    "Techno": 1,
+    "Uplifting Trance": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "spanish",
+    "SpanishAndEnglish",
+    "DanceMusic",
+    "DropsEnabled",
+    "Trance",
+    "TranceMusic",
+    "Techno",
+    "VocalTrance",
+    "UpliftingTrance"
+   ],
+   "source": "twitch-tags"
+  },
+  "burner71": {
+   "genres": [
+    "Drum & Bass"
+   ],
+   "scores": {
+    "Drum & Bass": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "Safezone",
+    "H21STBDFaith",
+    "Oldskool8892",
+    "OldSkoolJungle",
+    "DrumAndBass",
+    "Amens",
+    "NoDadDancing",
+    "English",
+    "WorldMusic",
+    "SundaySancturyraidtrain"
+   ],
+   "source": "twitch-tags"
+  },
+  "catch22": {
+   "genres": [
+    "Drum & Bass",
+    "Hip-Hop"
+   ],
+   "scores": {
+    "Drum & Bass": 3,
+    "Hip-Hop": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "Jungle",
+    "lofi",
+    "LiquidDNB",
+    "Syrup",
+    "DNB",
+    "Atmospheric",
+    "IntelligentJungle",
+    "PSJungle",
+    "hiphop"
+   ],
+   "source": "twitch-tags"
+  },
+  "chrisshawofficial": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "Trance",
+    "Uplifting",
+    "orchestral",
+    "English",
+    "DJ",
+    "ElectronicMusic",
+    "DanceMusic",
+    "Vocal",
+    "InclusiveCommunity",
+    "SafeSpace"
+   ],
+   "source": "twitch-tags"
+  },
+  "colins80sroadshow": {
+   "genres": [
+    "Retro / 80s-90s"
+   ],
+   "scores": {
+    "Retro / 80s-90s": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "70s",
+    "80s",
+    "90s",
+    "retro",
+    "uk",
+    "party",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "davemaco1": {
+   "genres": [],
+   "scores": {},
+   "game": "Live Day",
+   "tags": [
+    "English"
+   ],
+   "source": "none"
+  },
+  "davidmuthahfunkinanthony": {
+   "genres": [
+    "Organic House",
+    "Progressive House",
+    "Deep House"
+   ],
+   "scores": {
+    "Organic House": 3,
+    "Progressive House": 2,
+    "Deep House": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "DJ",
+    "OrganicHouse",
+    "ProgressiveHouse",
+    "deephouse",
+    "ADHD",
+    "Autisitic",
+    "DropsEnabled",
+    "NoFlashingLights",
+    "Canadian"
+   ],
+   "source": "twitch-tags"
+  },
+  "deejaybuffoon": {
+   "genres": [
+    "Disco",
+    "Funk"
+   ],
+   "scores": {
+    "Disco": 3,
+    "Funk": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "Disco",
+    "DanskMusik",
+    "70er",
+    "80er",
+    "90er",
+    "00er",
+    "Dansk",
+    "Funk",
+    "Eng"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj2bhappy": {
+   "genres": [
+    "Hardcore",
+    "Drum & Bass",
+    "Breaks"
+   ],
+   "scores": {
+    "Hardcore": 3,
+    "Drum & Bass": 3,
+    "Breaks": 2
+   },
+   "game": "Music",
+   "tags": [
+    "happyhardcore",
+    "ukhardcore",
+    "drumnbass",
+    "jungle",
+    "breakbeat",
+    "hardcore",
+    "gabber",
+    "harddance",
+    "rave",
+    "music"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_antox": {
+   "genres": [
+    "House",
+    "Techno",
+    "Trance"
+   ],
+   "scores": {
+    "House": 3,
+    "Techno": 3,
+    "Trance": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "House",
+    "Techno",
+    "Trance",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_delirious": {
+   "genres": [
+    "Drum & Bass",
+    "Hardcore",
+    "Hardstyle"
+   ],
+   "scores": {
+    "Drum & Bass": 2,
+    "Hardcore": 2,
+    "Hardstyle": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "music",
+    "English",
+    "rave",
+    "jungle",
+    "Hardcore",
+    "HardstyleMusic",
+    "hardhouse",
+    "breakbeat",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_quick_": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "ClassicTrance",
+    "UK",
+    "Wales",
+    "TranceClassics",
+    "LiveDJ",
+    "TranceAnthems",
+    "English",
+    "VisualASMR",
+    "DropsEnabled",
+    "halloween"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_simonsayz": {
+   "genres": [
+    "Melodic House & Techno",
+    "Progressive House"
+   ],
+   "scores": {
+    "Melodic House & Techno": 2,
+    "Progressive House": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "Australia",
+    "Deep",
+    "Progressive",
+    "MelodicHouse",
+    "ProgressiveHouse",
+    "Anjunadeep",
+    "English",
+    "Anjuna",
+    "Anjunabeats",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_td": {
+   "genres": [
+    "Trance",
+    "House",
+    "Retro / 80s-90s"
+   ],
+   "scores": {
+    "Trance": 2,
+    "House": 2,
+    "Retro / 80s-90s": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "DJ",
+    "music",
+    "EDM",
+    "Trance",
+    "House",
+    "Remixes",
+    "DJ",
+    "Rerun",
+    "80s"
+   ],
+   "source": "twitch-tags"
+  },
+  "dj_yula": {
+   "genres": [
+    "Trance",
+    "Techno"
+   ],
+   "scores": {
+    "Trance": 3,
+    "Techno": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "Trance",
+    "DJ",
+    "English",
+    "Techno",
+    "ElectronicMusic",
+    "DanceMusic",
+    "AStateOfTrance",
+    "EDM",
+    "Anjunabeats",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "djbasscrasher": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "TDJs",
+    "TwitchDJs",
+    "trance",
+    "tranceclassics",
+    "tramcefamily",
+    "vinyl",
+    "rave",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "djcquence": {
+   "genres": [
+    "Trance",
+    "House",
+    "Techno"
+   ],
+   "scores": {
+    "Trance": 2,
+    "House": 2,
+    "Techno": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "Australia",
+    "English",
+    "DJ",
+    "Trance",
+    "House",
+    "Progressive",
+    "Techno",
+    "SafeSpace",
+    "music",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "djcti": {
+   "genres": [],
+   "scores": {},
+   "game": "DJs",
+   "tags": [
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "djgamma1": {
+   "genres": [
+    "Trance",
+    "Uplifting Trance"
+   ],
+   "scores": {
+    "Trance": 2,
+    "Uplifting Trance": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "TDJs",
+    "DJ",
+    "English",
+    "DropsEnabled",
+    "Trance",
+    "UpliftingTrance"
+   ],
+   "source": "twitch-tags"
+  },
+  "djjohnnyp2020": {
+   "genres": [
+    "Retro / 80s-90s",
+    "Rock"
+   ],
+   "scores": {
+    "Retro / 80s-90s": 3,
+    "Rock": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "RetroMusic",
+    "DJ",
+    "English",
+    "DanceMusic",
+    "Rock",
+    "Pop",
+    "90s",
+    "80s",
+    "Bingo",
+    "Quiz"
+   ],
+   "source": "twitch-tags"
+  },
+  "djnethalin": {
+   "genres": [
+    "Hardcore",
+    "Trance"
+   ],
+   "scores": {
+    "Hardcore": 1,
+    "Trance": 1
+   },
+   "game": "The Elder Scrolls V: Skyrim",
+   "tags": [
+    "DJ",
+    "EDM",
+    "music",
+    "TwitchDJs",
+    "Neurodivergent",
+    "StellarTransmissions",
+    "rave",
+    "Hardcore",
+    "Trance",
+    "808ontwitch"
+   ],
+   "source": "twitch-tags"
+  },
+  "djog3": {
+   "genres": [
+    "Trance",
+    "House",
+    "Breaks"
+   ],
+   "scores": {
+    "Trance": 3,
+    "House": 2,
+    "Breaks": 2
+   },
+   "game": "TechnoClash",
+   "tags": [
+    "English",
+    "EDM",
+    "Trance",
+    "housemusic",
+    "House",
+    "breakbeat",
+    "DJ",
+    "ElectronicMusic",
+    "bass",
+    "Progressive"
+   ],
+   "source": "twitch-tags"
+  },
+  "djpsyclone": {
+   "genres": [
+    "Techno",
+    "Trance",
+    "House"
+   ],
+   "scores": {
+    "Techno": 3,
+    "Trance": 3,
+    "House": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "Techno",
+    "Trance",
+    "DJ",
+    "House",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "djsigvaldason": {
+   "genres": [
+    "Trance",
+    "Psytrance",
+    "Uplifting Trance"
+   ],
+   "scores": {
+    "Trance": 2,
+    "Psytrance": 2,
+    "Uplifting Trance": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "English",
+    "Dansk",
+    "teamstellartransmissions",
+    "Trance",
+    "Psytrance",
+    "UpliftingTrance",
+    "TranceFamily",
+    "ProgressiveTrance",
+    "RadioShow"
+   ],
+   "source": "twitch-tags"
+  },
+  "djsoo": {
+   "genres": [
+    "House",
+    "Hip-Hop"
+   ],
+   "scores": {
+    "House": 3,
+    "Hip-Hop": 2
+   },
+   "game": "Music",
+   "tags": [
+    "English",
+    "housemusic",
+    "EDM",
+    "HipHop",
+    "DJ"
+   ],
+   "source": "twitch-tags"
+  },
+  "djweerisky": {
+   "genres": [
+    "Retro / 80s-90s"
+   ],
+   "scores": {
+    "Retro / 80s-90s": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "dj",
+    "dance",
+    "music",
+    "80s",
+    "80smusic",
+    "Eighties",
+    "English",
+    "DropsEnabled",
+    "90s",
+    "Nineties"
+   ],
+   "source": "twitch-tags"
+  },
+  "djxwahya": {
+   "genres": [
+    "House"
+   ],
+   "scores": {
+    "House": 3
+   },
+   "game": "Music",
+   "tags": [
+    "House",
+    "Musician",
+    "DJ",
+    "MentalHealth",
+    "Animals",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "dmdippingsauce": {
+   "genres": [],
+   "scores": {},
+   "game": "Escape from Tarkov",
+   "tags": [
+    "English"
+   ],
+   "source": "none"
+  },
+  "drey_tolosa": {
+   "genres": [
+    "Techno"
+   ],
+   "scores": {
+    "Techno": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "techno",
+    "dj",
+    "francais",
+    "french",
+    "hardtechno",
+    "StellarTransmissions",
+    "English",
+    "ElectronicMusic"
+   ],
+   "source": "twitch-tags"
+  },
+  "elevenermusic": {
+   "genres": [],
+   "scores": {},
+   "game": "Games + Demos",
+   "tags": [
+    "AsianAmerican",
+    "AsianGamer",
+    "asiancreator",
+    "AsianFriendly",
+    "asianculture",
+    "English",
+    "ghostofy\u014dtei",
+    "GhostofY\u014dteigameplay"
+   ],
+   "source": "none"
+  },
+  "elynaen": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "djane",
+    "English",
+    "PNW",
+    "DJ",
+    "Trance",
+    "Electronic",
+    "electronica",
+    "happy",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "ezkillhardcore": {
+   "genres": [
+    "Hardcore",
+    "Hardstyle"
+   ],
+   "scores": {
+    "Hardcore": 2,
+    "Hardstyle": 2
+   },
+   "game": "Music",
+   "tags": [
+    "170",
+    "ezkill",
+    "reversebass",
+    "hardcore",
+    "harddance",
+    "hardstyle",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "fucsiaworld": {
+   "genres": [
+    "House",
+    "Techno",
+    "Tech House"
+   ],
+   "scores": {
+    "House": 3,
+    "Techno": 3,
+    "Tech House": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "House",
+    "Techno",
+    "TechHouse",
+    "DJ",
+    "Music",
+    "Melodic",
+    "Proggressive",
+    "DropsEnabled",
+    "IndieTech"
+   ],
+   "source": "twitch-tags"
+  },
+  "fuddins_": {
+   "genres": [
+    "Hardcore",
+    "Techno"
+   ],
+   "scores": {
+    "Hardcore": 3,
+    "Techno": 2
+   },
+   "game": "",
+   "tags": [
+    "amateur",
+    "scottish",
+    "Hardcore",
+    "Techno",
+    "rave",
+    "HappyHardcore",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "jacinta_wolf_raven1": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "Trance",
+    "hardtrance",
+    "clubmusic",
+    "Aussie",
+    "DJ",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "jillobird": {
+   "genres": [
+    "Techno",
+    "House",
+    "Trance"
+   ],
+   "scores": {
+    "Techno": 3,
+    "House": 3,
+    "Trance": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "MUSIC",
+    "TECHNO",
+    "HOUSE",
+    "DJ",
+    "DANCE",
+    "English",
+    "Trance",
+    "ElectronicMusic",
+    "ProgressiveHouseMelodic",
+    "ADHDfriendly"
+   ],
+   "source": "twitch-tags"
+  },
+  "jiltedhybrid": {
+   "genres": [],
+   "scores": {},
+   "game": "Music",
+   "tags": [
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "l3ftfield": {
+   "genres": [
+    "Breaks"
+   ],
+   "scores": {
+    "Breaks": 3
+   },
+   "game": "Music",
+   "tags": [
+    "Queer",
+    "electronic",
+    "breaks",
+    "DJ",
+    "LGBT",
+    "Trans",
+    "UKG",
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "l_natass_l": {
+   "genres": [
+    "Techno"
+   ],
+   "scores": {
+    "Techno": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "ElectronicMusic",
+    "Techno",
+    "DanceMusic",
+    "IndieMusic",
+    "DJ",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "lavelleofficial": {
+   "genres": [
+    "Progressive House",
+    "Melodic House & Techno",
+    "Organic House"
+   ],
+   "scores": {
+    "Progressive House": 3,
+    "Melodic House & Techno": 3,
+    "Organic House": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "progressivehouse",
+    "MelodicHouseAndTechno",
+    "OrganicHouse",
+    "healingvibes",
+    "Prog",
+    "Trance",
+    "420friendy",
+    "LurkerFriendly",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "liaisonmusic": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 2
+   },
+   "game": "Music",
+   "tags": [
+    "Australian",
+    "DJ",
+    "StellarTransmissions",
+    "TranceMusic",
+    "TeamVibezLive",
+    "musiclover",
+    "English",
+    "TranceMusic",
+    "TranceDJ",
+    "TwitchDJs"
+   ],
+   "source": "twitch-tags"
+  },
+  "lincolnhaukdj": {
+   "genres": [],
+   "scores": {},
+   "game": "DJs",
+   "tags": [
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "liquid_bongo": {
+   "genres": [
+    "Trance",
+    "Techno",
+    "Retro / 80s-90s"
+   ],
+   "scores": {
+    "Trance": 2,
+    "Techno": 1,
+    "Retro / 80s-90s": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "ElectronicMusic",
+    "Panda",
+    "Melodic",
+    "Australian",
+    "Trance",
+    "DJ",
+    "Progressive",
+    "Techno",
+    "80s",
+    "MelodicTechno"
+   ],
+   "source": "twitch-tags"
+  },
+  "mad_rabbits": {
+   "genres": [
+    "House"
+   ],
+   "scores": {
+    "House": 2
+   },
+   "game": "Games + Demos",
+   "tags": [
+    "English",
+    "alcoholfriendly",
+    "chicago",
+    "stellartransmissionscrew",
+    "housemusic",
+    "bestdjsontwitch"
+   ],
+   "source": "twitch-tags"
+  },
+  "mark_loves_coffee_": {
+   "genres": [
+    "House",
+    "Techno"
+   ],
+   "scores": {
+    "House": 1,
+    "Techno": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "edm",
+    "Dance",
+    "Electronic",
+    "English",
+    "MelodicTechno",
+    "houseandtechno",
+    "Techno",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "markinsutton": {
+   "genres": [],
+   "scores": {},
+   "game": "Just Chatting",
+   "tags": [
+    "NerdSafeSpace",
+    "BRWCRW",
+    "treatyourgeek",
+    "StellarTransmissions",
+    "velvetandfriends",
+    "Disability",
+    "English",
+    "irl",
+    "uk"
+   ],
+   "source": "none"
+  },
+  "mixlmusic": {
+   "genres": [],
+   "scores": {},
+   "game": "Music",
+   "tags": [
+    "MusicProduction",
+    "DJ",
+    "Musician",
+    "English",
+    "ElectronicMusic",
+    "DanceMusic",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "music4thamasses": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 1
+   },
+   "game": "Music",
+   "tags": [
+    "deep",
+    "melodic",
+    "progressive",
+    "English",
+    "DJ",
+    "ElectronicMusic",
+    "Trance",
+    "TranceMusic",
+    "TranceClassics",
+    "PrideMonth"
+   ],
+   "source": "twitch-tags"
+  },
+  "mystixa": {
+   "genres": [
+    "House",
+    "Trance",
+    "Techno"
+   ],
+   "scores": {
+    "House": 3,
+    "Trance": 1,
+    "Techno": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "House",
+    "Electronica",
+    "EDM",
+    "underground",
+    "rave",
+    "trance",
+    "DanceClubMusic",
+    "Techno",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "nickarkell": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "DJ",
+    "Trance",
+    "music",
+    "vinyl",
+    "VinylDJ",
+    "EDM",
+    "DanceMusic",
+    "Progressive",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "omega11xx": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 1
+   },
+   "game": "Music",
+   "tags": [
+    "DJ",
+    "omega11xx",
+    "HTID",
+    "HHC",
+    "OMEGAGANSTAMODE",
+    "Seattle",
+    "English",
+    "ElectronicMusic",
+    "Trance",
+    "DanceMusic"
+   ],
+   "source": "twitch-tags"
+  },
+  "onlythedetails": {
+   "genres": [
+    "Techno"
+   ],
+   "scores": {
+    "Techno": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "Techno",
+    "Dance",
+    "party",
+    "chat",
+    "warcraft",
+    "WorldofWarcaft",
+    "wow",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "orgazmotron86": {
+   "genres": [],
+   "scores": {},
+   "game": "Music",
+   "tags": [
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "poddersdj": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "Music",
+   "tags": [
+    "Vinyl",
+    "ClassicTrance",
+    "Trance",
+    "English",
+    "ElectronicMusic",
+    "DJ",
+    "DanceMusic",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "ravinrach247": {
+   "genres": [
+    "Trance"
+   ],
+   "scores": {
+    "Trance": 3
+   },
+   "game": "DJs",
+   "tags": [
+    "trance",
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "richgreen": {
+   "genres": [],
+   "scores": {},
+   "game": "DJs",
+   "tags": [
+    "NYCSTREAMER",
+    "nyc",
+    "chill",
+    "IRL",
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "rpm_dj": {
+   "genres": [
+    "Retro / 80s-90s",
+    "Disco"
+   ],
+   "scores": {
+    "Retro / 80s-90s": 2,
+    "Disco": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "CANADA",
+    "English",
+    "MusicVideos",
+    "70sMusic",
+    "Disco",
+    "70sDISCO",
+    "SaturdayNightFever",
+    "RetroSunday",
+    "VideoDJ"
+   ],
+   "source": "twitch-tags"
+  },
+  "sprinxxx_": {
+   "genres": [
+    "Techno"
+   ],
+   "scores": {
+    "Techno": 3
+   },
+   "game": "Music",
+   "tags": [
+    "dj",
+    "techno",
+    "music",
+    "femaledj",
+    "edm",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "streetflicker": {
+   "genres": [
+    "Drum & Bass"
+   ],
+   "scores": {
+    "Drum & Bass": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "Aussie",
+    "Electronic",
+    "dnb",
+    "drumandbass",
+    "vietnamese",
+    "English"
+   ],
+   "source": "twitch-tags"
+  },
+  "teknokat222": {
+   "genres": [
+    "Techno",
+    "Tech House",
+    "Progressive House"
+   ],
+   "scores": {
+    "Techno": 3,
+    "Tech House": 2,
+    "Progressive House": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "DJ",
+    "djs",
+    "Techno",
+    "techhouse",
+    "AuDHD",
+    "English",
+    "progressivehouse",
+    "MelodicTechno",
+    "Yapper",
+    "HousemusicDJ"
+   ],
+   "source": "twitch-tags"
+  },
+  "thedjbigd": {
+   "genres": [
+    "Progressive House",
+    "House"
+   ],
+   "scores": {
+    "Progressive House": 3,
+    "House": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "progressivehouse",
+    "FriendlyChat",
+    "StreamerBot",
+    "DJLife",
+    "DJ",
+    "HouseMusic",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "trancejesus": {
+   "genres": [
+    "Trance",
+    "Techno"
+   ],
+   "scores": {
+    "Trance": 3,
+    "Techno": 1
+   },
+   "game": "DJs",
+   "tags": [
+    "TranceFamily",
+    "jesus",
+    "English",
+    "Trance",
+    "ElectronicMusic",
+    "DanceMusic",
+    "Techno",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  },
+  "tranceymonster": {
+   "genres": [],
+   "scores": {},
+   "game": "Music",
+   "tags": [
+    "English"
+   ],
+   "source": "none"
+  },
+  "unrealdjofficial": {
+   "genres": [],
+   "scores": {},
+   "game": "DJs",
+   "tags": [
+    "English",
+    "DropsEnabled"
+   ],
+   "source": "none"
+  },
+  "viciouscode": {
+   "genres": [
+    "Trance",
+    "Progressive House",
+    "Breaks"
+   ],
+   "scores": {
+    "Trance": 3,
+    "Progressive House": 3,
+    "Breaks": 2
+   },
+   "game": "DJs",
+   "tags": [
+    "English",
+    "Trance",
+    "ProgressiveHouse",
+    "MelodicTechno",
+    "Breakbeat",
+    "Acid",
+    "Techno",
+    "DropsEnabled"
+   ],
+   "source": "twitch-tags"
+  }
+ }
+}
