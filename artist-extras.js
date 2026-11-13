@@ -551,4 +551,128 @@
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule);
   else schedule();
+
+  // ---- anonymous beacon module -------------------------------------------
+  (function beacon() {
+    var BEACON_URL = "/api/events";
+    var SID_KEY = "starchive_sid";
+    var PLAY_DEDUP_MS = 2000;
+    var PAGE_DEDUP_MS = 5000;
+    var MAX_LEN = 100;
+
+    function sid() {
+      try {
+        var existing = sessionStorage.getItem(SID_KEY);
+        if (existing) return existing;
+      } catch (e) {}
+      var id = "";
+      var chars = "0123456789abcdef";
+      for (var i = 0; i < 32; i += 1) id += chars[Math.floor(Math.random() * 16)];
+      try { sessionStorage.setItem(SID_KEY, id); } catch (e) {}
+      return id;
+    }
+
+    function clean(s) {
+      return String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9_.\-/]/g, "").slice(0, MAX_LEN);
+    }
+
+    function cleanPath(s) {
+      return String(s == null ? "" : s).slice(0, MAX_LEN);
+    }
+
+    function send(payload) {
+      payload.sid = sid();
+      var body = JSON.stringify(payload);
+      try {
+        var blob = new Blob([body], { type: "application/json" });
+        if (navigator.sendBeacon && navigator.sendBeacon(BEACON_URL, blob)) return;
+      } catch (e) {}
+      try {
+        fetch(BEACON_URL, { method: "POST", body: body, keepalive: true, headers: { "Content-Type": "application/json" } })
+          .catch(function () {});
+      } catch (e) {}
+    }
+
+    var lastPlay = Object.create(null);
+
+    function parsePlaySrc(src) {
+      if (!src) return null;
+      var archiveMatch = /^https:\/\/starchive\.streambox\.space\/([a-z0-9_]+)\/([^/]+)$/i.exec(src);
+      if (archiveMatch) {
+        var file = archiveMatch[2].replace(/\.[^.]+$/, "");
+        return { type: "play", artist: archiveMatch[1], track: file };
+      }
+      var liveMatch = /^(?:https?:\/\/[^/]+)?\/stream\/([a-z0-9_]+)$/i.exec(src);
+      if (liveMatch) {
+        return { type: "live_play", artist: liveMatch[1], track: "" };
+      }
+      return null;
+    }
+
+    document.addEventListener("play", function (e) {
+      var target = e.target;
+      if (!target || typeof target.getAttribute !== "function") return;
+      var src = target.currentSrc || target.src || target.getAttribute("src");
+      var ev = parsePlaySrc(src);
+      if (!ev) return;
+      var key = ev.type + "|" + ev.artist + "|" + ev.track;
+      var now = Date.now();
+      if (lastPlay[key] && now - lastPlay[key] < PLAY_DEDUP_MS) return;
+      lastPlay[key] = now;
+      send({ type: ev.type, artist: clean(ev.artist), track: clean(ev.track) });
+    }, true);
+
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest("button.fav-btn");
+      if (!btn) return;
+      var title = String(btn.getAttribute("title") || btn.textContent || "");
+      var action = /remove/i.test(title) ? "unfavorite" : "favorite";
+      var artist = "";
+      var card = btn.closest(".artist-card");
+      if (card) {
+        var img = card.querySelector("img[alt]");
+        if (img) artist = img.getAttribute("alt");
+      }
+      if (!artist) {
+        var hero = document.querySelector(".artist-hero-name");
+        if (hero) {
+          var clone = hero.cloneNode(true);
+          var tribute = clone.querySelector(".ax-tribute");
+          if (tribute) tribute.remove();
+          artist = (clone.textContent || "").trim();
+        }
+      }
+      if (!artist) return;
+      send({ type: action, artist: clean(artist), track: "" });
+    });
+
+    var lastPage = Object.create(null);
+
+    function sendPage() {
+      var path = location.pathname;
+      var now = Date.now();
+      if (lastPage[path] && now - lastPage[path] < PAGE_DEDUP_MS) return;
+      lastPage[path] = now;
+      send({ type: "page", artist: "", track: cleanPath(path) });
+    }
+
+    function wrapHistory(method) {
+      var orig = history[method];
+      if (typeof orig !== "function") return;
+      history[method] = function () {
+        var result = orig.apply(this, arguments);
+        try { sendPage(); } catch (e) {}
+        return result;
+      };
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", sendPage);
+    } else {
+      sendPage();
+    }
+    wrapHistory("pushState");
+    wrapHistory("replaceState");
+    window.addEventListener("popstate", sendPage);
+  })();
 })();

@@ -80,23 +80,170 @@
       </section>
 
       <section class="page hidden" id="page-popularity">
-        <div class="card empty-state">
-          <h2 class="card-title">Popularity</h2>
-          <p>Most-played artists and tracks, plus favourite trends. Coming in phase 2.</p>
+        <div class="stat-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Plays</span>
+            <span class="stat-value" id="pop-plays">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Favourites</span>
+            <span class="stat-value" id="pop-favourites">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Live plays</span>
+            <span class="stat-value" id="pop-live">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Pages</span>
+            <span class="stat-value" id="pop-pages">0</span>
+          </article>
+        </div>
+        <div class="card table-card">
+          <div class="card-header">
+            <h2 class="card-title">Top DJs</h2>
+            <div class="day-selector" id="pop-days">
+              <button type="button" data-days="7" class="is-active">7d</button>
+              <button type="button" data-days="30">30d</button>
+              <button type="button" data-days="90">90d</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="num">Rank</th>
+                  <th>DJ</th>
+                  <th class="num">Plays</th>
+                  <th class="num">Favourites</th>
+                  <th class="num">Live plays</th>
+                  <th class="num">Score</th>
+                </tr>
+              </thead>
+              <tbody id="pop-artists-body">
+                <tr class="empty-row"><td colspan="6">No data collected yet — beacons start recording after the next deploy</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card table-card">
+          <h2 class="card-title">Top tracks</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th class="num">Rank</th>
+                  <th>DJ</th>
+                  <th>Track</th>
+                  <th class="num">Plays</th>
+                </tr>
+              </thead>
+              <tbody id="pop-tracks-body">
+                <tr class="empty-row"><td colspan="4">No data collected yet — beacons start recording after the next deploy</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section class="page hidden" id="page-live">
-        <div class="card empty-state">
-          <h2 class="card-title">Live</h2>
-          <p>Live listener graphs, mount health, and stream history. Coming in phase 2.</p>
+        <div class="stat-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Peak listeners</span>
+            <span class="stat-value" id="live-peak">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Average</span>
+            <span class="stat-value" id="live-average">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Samples</span>
+            <span class="stat-value" id="live-samples">0</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Period</span>
+            <span class="stat-value" id="live-days">7d</span>
+          </article>
+        </div>
+        <div class="card table-card">
+          <div class="card-header">
+            <h2 class="card-title">Concurrent listeners</h2>
+            <div class="day-selector" id="live-days-selector">
+              <button type="button" data-days="7" class="is-active">7d</button>
+              <button type="button" data-days="30">30d</button>
+              <button type="button" data-days="90">90d</button>
+            </div>
+          </div>
+          <div class="sparkline-wrap" id="live-sparkline-wrap">
+            <svg id="live-sparkline" viewBox="0 0 800 160" preserveAspectRatio="none" class="sparkline" role="img" aria-label="Listener sparkline">
+              <polyline id="live-sparkline-line" fill="none" stroke="var(--accent-2)" stroke-width="2" points=""/>
+            </svg>
+            <p class="empty" id="live-sparkline-empty">No listener samples yet.</p>
+          </div>
+        </div>
+        <div class="card table-card">
+          <h2 class="card-title">Live minutes by DJ</h2>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>DJ</th>
+                  <th class="num">Minutes</th>
+                  <th class="num">Peak</th>
+                </tr>
+              </thead>
+              <tbody id="live-djs-body">
+                <tr class="empty-row"><td colspan="3">No data collected yet — beacons start recording after the next deploy</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section class="page hidden" id="page-traffic">
-        <div class="card empty-state">
-          <h2 class="card-title">Traffic</h2>
-          <p>Bandwidth usage, endpoint breakdown, and request counts. Coming in phase 3.</p>
+        <div class="stat-grid">
+          <article class="card stat-card">
+            <span class="stat-label">Total bytes</span>
+            <span class="stat-value" id="traffic-total">0 B</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Stream bytes</span>
+            <span class="stat-value" id="traffic-stream">0 B</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">Static bytes</span>
+            <span class="stat-value" id="traffic-static">0 B</span>
+          </article>
+          <article class="card stat-card">
+            <span class="stat-label">API bytes</span>
+            <span class="stat-value" id="traffic-api">0 B</span>
+          </article>
+        </div>
+        <div class="card table-card">
+          <div class="card-header">
+            <h2 class="card-title">Per-day traffic</h2>
+            <div class="day-selector" id="traffic-days">
+              <button type="button" data-days="7" class="is-active">7d</button>
+              <button type="button" data-days="30">30d</button>
+              <button type="button" data-days="90">90d</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th class="num">Stream</th>
+                  <th class="num">Static</th>
+                  <th class="num">API</th>
+                  <th class="num">Pages</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody id="traffic-body">
+                <tr class="empty-row"><td colspan="6">No data collected yet — beacons start recording after the next deploy</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

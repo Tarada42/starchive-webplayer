@@ -26,6 +26,28 @@ const els = {
   statFavourites: document.getElementById("stat-favourites"),
   liveList: document.getElementById("live-list"),
   collectionMeta: document.getElementById("collection-meta"),
+  popPlays: document.getElementById("pop-plays"),
+  popFavourites: document.getElementById("pop-favourites"),
+  popLive: document.getElementById("pop-live"),
+  popPages: document.getElementById("pop-pages"),
+  popArtistsBody: document.getElementById("pop-artists-body"),
+  popTracksBody: document.getElementById("pop-tracks-body"),
+  popDays: document.getElementById("pop-days"),
+  livePeak: document.getElementById("live-peak"),
+  liveAverage: document.getElementById("live-average"),
+  liveSamples: document.getElementById("live-samples"),
+  liveDays: document.getElementById("live-days"),
+  liveSparkline: document.getElementById("live-sparkline"),
+  liveSparklineLine: document.getElementById("live-sparkline-line"),
+  liveSparklineEmpty: document.getElementById("live-sparkline-empty"),
+  liveDjsBody: document.getElementById("live-djs-body"),
+  liveDaysSelector: document.getElementById("live-days-selector"),
+  trafficTotal: document.getElementById("traffic-total"),
+  trafficStream: document.getElementById("traffic-stream"),
+  trafficStatic: document.getElementById("traffic-static"),
+  trafficApi: document.getElementById("traffic-api"),
+  trafficBody: document.getElementById("traffic-body"),
+  trafficDays: document.getElementById("traffic-days"),
 };
 
 async function api(url, options = {}) {
@@ -113,6 +135,14 @@ async function loadOverview() {
   }
 }
 
+function formatBytes(n) {
+  if (n === 0 || !Number.isFinite(n)) return "0 B";
+  const units = ["B", "KiB", "MiB", "GiB", "TiB"];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  const v = n / Math.pow(1024, i);
+  return `${v.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+}
+
 function escapeHtml(text) {
   return String(text)
     .replace(/&/g, "&amp;")
@@ -120,6 +150,157 @@ function escapeHtml(text) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function setDaySelector(container, days) {
+  if (!container) return;
+  for (const btn of container.querySelectorAll("button")) {
+    btn.classList.toggle("is-active", Number(btn.dataset.days) === days);
+  }
+}
+
+function emptyRow(cols, text) {
+  return `<tr class="empty-row"><td colspan="${cols}">${escapeHtml(text)}</td></tr>`;
+}
+
+async function loadPopularity(days = 7) {
+  try {
+    const res = await fetch(`${API_PREFIX}/popularity?days=${days}`, {
+      headers: { "x-csrf-token": csrfToken },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setDaySelector(els.popDays, data.days);
+    els.popPlays.textContent = (data.totals?.plays || 0).toLocaleString();
+    els.popFavourites.textContent = (data.totals?.favorites || 0).toLocaleString();
+    els.popLive.textContent = (data.totals?.livePlays || 0).toLocaleString();
+    els.popPages.textContent = (data.totals?.pages || 0).toLocaleString();
+
+    if (Array.isArray(data.artists) && data.artists.length) {
+      els.popArtistsBody.innerHTML = data.artists
+        .map((a, i) => `<tr>
+          <td class="num">${i + 1}</td>
+          <td>${escapeHtml(a.artist)}</td>
+          <td class="num">${(a.plays || 0).toLocaleString()}</td>
+          <td class="num">${(a.favorites || 0).toLocaleString()}</td>
+          <td class="num">${(a.livePlays || 0).toLocaleString()}</td>
+          <td class="num">${(a.score || 0).toLocaleString()}</td>
+        </tr>`)
+        .join("");
+    } else {
+      els.popArtistsBody.innerHTML = emptyRow(6, "No data collected yet — beacons start recording after the next deploy");
+    }
+
+    if (Array.isArray(data.tracks) && data.tracks.length) {
+      els.popTracksBody.innerHTML = data.tracks
+        .map((t, i) => `<tr>
+          <td class="num">${i + 1}</td>
+          <td>${escapeHtml(t.artist)}</td>
+          <td>${escapeHtml(t.track)}</td>
+          <td class="num">${(t.plays || 0).toLocaleString()}</td>
+        </tr>`)
+        .join("");
+    } else {
+      els.popTracksBody.innerHTML = emptyRow(4, "No data collected yet — beacons start recording after the next deploy");
+    }
+  } catch (e) {
+    console.error("Failed to load popularity:", e);
+  }
+}
+
+function renderSparkline(samples) {
+  if (!Array.isArray(samples) || samples.length < 2) {
+    els.liveSparkline.style.display = "none";
+    els.liveSparklineEmpty.style.display = "block";
+    return;
+  }
+  const values = samples.map((s) => (Number.isFinite(s.total) ? s.total : 0));
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const width = 800;
+  const height = 160;
+  const padding = 4;
+  const usableH = height - padding * 2;
+  const stepX = width / (values.length - 1);
+  const range = Math.max(1, max - min);
+  const points = values
+    .map((v, i) => {
+      const x = Math.round(i * stepX);
+      const y = Math.round(height - padding - ((v - min) / range) * usableH);
+      return `${x},${y}`;
+    })
+    .join(" ");
+  els.liveSparklineLine.setAttribute("points", points);
+  els.liveSparkline.style.display = "block";
+  els.liveSparklineEmpty.style.display = "none";
+}
+
+async function loadLive(days = 7) {
+  try {
+    const res = await fetch(`${API_PREFIX}/live?days=${days}`, {
+      headers: { "x-csrf-token": csrfToken },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setDaySelector(els.liveDaysSelector, data.days);
+    els.liveDays.textContent = `${data.days}d`;
+    els.livePeak.textContent = (data.peak?.total || 0).toLocaleString();
+    els.liveAverage.textContent = Number(data.average || 0).toFixed(1);
+    els.liveSamples.textContent = (data.samples || 0).toLocaleString();
+
+    if (Array.isArray(data.byDay) && data.byDay.length) {
+      renderSparkline(data.byDay);
+    } else {
+      renderSparkline([]);
+    }
+
+    if (Array.isArray(data.djs) && data.djs.length) {
+      els.liveDjsBody.innerHTML = data.djs
+        .map((d) => `<tr>
+          <td>${escapeHtml(d.artist)}</td>
+          <td class="num">${(d.minutes || 0).toLocaleString()}</td>
+          <td class="num">${(d.peak || 0).toLocaleString()}</td>
+        </tr>`)
+        .join("");
+    } else {
+      els.liveDjsBody.innerHTML = emptyRow(3, "No data collected yet — beacons start recording after the next deploy");
+    }
+  } catch (e) {
+    console.error("Failed to load live stats:", e);
+  }
+}
+
+async function loadTraffic(days = 7) {
+  try {
+    const res = await fetch(`${API_PREFIX}/traffic?days=${days}`, {
+      headers: { "x-csrf-token": csrfToken },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    setDaySelector(els.trafficDays, data.days);
+    const t = data.totals || {};
+    els.trafficTotal.textContent = formatBytes(t.total || 0);
+    els.trafficStream.textContent = formatBytes(t.stream || 0);
+    els.trafficStatic.textContent = formatBytes(t.static || 0);
+    els.trafficApi.textContent = formatBytes(t.api || 0);
+
+    if (Array.isArray(data.daysList) && data.daysList.length) {
+      els.trafficBody.innerHTML = data.daysList
+        .map((d) => `<tr>
+          <td>${escapeHtml(d.date)}</td>
+          <td class="num">${formatBytes(d.stream || 0)}</td>
+          <td class="num">${formatBytes(d.static || 0)}</td>
+          <td class="num">${formatBytes(d.api || 0)}</td>
+          <td class="num">${formatBytes(d.page || 0)}</td>
+          <td class="num">${formatBytes(d.total || 0)}</td>
+        </tr>`)
+        .join("");
+    } else {
+      els.trafficBody.innerHTML = emptyRow(6, "No data collected yet — beacons start recording after the next deploy");
+    }
+  } catch (e) {
+    console.error("Failed to load traffic:", e);
+  }
 }
 
 function setRoute(route) {
@@ -136,6 +317,12 @@ function setRoute(route) {
   }
   if (route === "overview") {
     loadOverview();
+  } else if (route === "popularity") {
+    loadPopularity();
+  } else if (route === "live") {
+    loadLive();
+  } else if (route === "traffic") {
+    loadTraffic();
   }
 }
 
@@ -187,6 +374,20 @@ els.logoutForm.addEventListener("submit", async (e) => {
     showLogin();
   }
 });
+
+function bindDaySelector(container, loader) {
+  if (!container) return;
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-days]");
+    if (!btn) return;
+    const days = Number(btn.dataset.days);
+    loader(days);
+  });
+}
+
+bindDaySelector(els.popDays, loadPopularity);
+bindDaySelector(els.liveDaysSelector, loadLive);
+bindDaySelector(els.trafficDays, loadTraffic);
 
 els.menuToggle.addEventListener("click", () => {
   const expanded = els.sidebar.classList.toggle("open");

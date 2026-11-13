@@ -9,6 +9,7 @@ import { createAuth } from "./auth.mjs";
 import { verifyAccessJwt, createJwksFetcher } from "./access.mjs";
 import artistsHandler from "../api/artists.js";
 import liveHandler from "../api/live.js";
+import { popularity, traffic, liveStats } from "./aggregate.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -313,6 +314,46 @@ export function createAdminApp({ dataDir }) {
     } catch (e) {
       console.error("GET /api/admin/overview failed:", e);
       res.status(500).json({ error: "Failed to build overview" });
+    }
+  });
+
+  function parseDays(req) {
+    const raw = req.query?.days;
+    if (raw === undefined || raw === "") return 7;
+    const n = parseInt(raw, 10);
+    if (!Number.isFinite(n) || Number.isNaN(n)) return 7;
+    if (n < 1) return 1;
+    if (n > 90) return 90;
+    return n;
+  }
+
+  app.get("/api/admin/popularity", (req, res) => {
+    try {
+      const days = parseDays(req);
+      res.status(200).json(popularity(dataDir, days));
+    } catch (e) {
+      console.error("GET /api/admin/popularity failed:", e);
+      res.status(500).json({ error: "Failed to load popularity" });
+    }
+  });
+
+  app.get("/api/admin/traffic", (req, res) => {
+    try {
+      const days = parseDays(req);
+      res.status(200).json(traffic(dataDir, days));
+    } catch (e) {
+      console.error("GET /api/admin/traffic failed:", e);
+      res.status(500).json({ error: "Failed to load traffic" });
+    }
+  });
+
+  app.get("/api/admin/live", (req, res) => {
+    try {
+      const days = parseDays(req);
+      res.status(200).json(liveStats(dataDir, days));
+    } catch (e) {
+      console.error("GET /api/admin/live failed:", e);
+      res.status(500).json({ error: "Failed to load live stats" });
     }
   });
 

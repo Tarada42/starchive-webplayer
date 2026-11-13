@@ -66,6 +66,73 @@ function flushMetrics() {
 setInterval(flushMetrics, METRICS_FLUSH_MS);
 process.on("SIGTERM", flushMetrics);
 
+// Listener sampler: fetch Icecast status every 60 s (and once ~15 s after boot).
+const ICECAST_STATUS_URL = "https://live.streambox.space/";
+const LISTENER_SAMPLE_INTERVAL_MS = 60_000;
+const LISTENER_SAMPLE_BOOT_DELAY_MS = 15_000;
+
+function readLiveExcluded() {
+  try {
+    const p = path.join(__dirname, "live-excluded.json");
+    if (!fs.existsSync(p)) return new Set();
+    const data = JSON.parse(fs.readFileSync(p, "utf8"));
+    return new Set((data.excluded || []).map((s) => String(s).toLowerCase()));
+  } catch {
+    return new Set();
+  }
+}
+
+function parseListenerSamples(html) {
+  const excluded = readLiveExcluded();
+  const mounts = new Map(); // base mount -> max listener count
+  const parts = html.split(/Mountpoint/i);
+  for (let i = 1; i < parts.length; i += 1) {
+    const section = parts[i];
+    const mpMatch = section.match(/<code>\s*\/([^<]+)\s*<\/code>/i);
+    // The count sits in the next table cell: "Listeners (current):</td><td>3</td>"
+    const listenerMatch = section.match(/Listeners\s*\(current\):\s*<\/td>\s*<td[^>]*>\s*(\d+)/i);
+    if (!mpMatch || !listenerMatch) continue;
+    let id = mpMatch[1].trim();
+    id = id.replace(/_hq$/i, "");
+    const count = parseInt(listenerMatch[1], 10);
+    if (Number.isNaN(count)) continue;
+    const base = id.toLowerCase();
+    if (excluded.has(base)) continue;
+    mounts.set(base, Math.max(mounts.get(base) || 0, count));
+  }
+  const result = {};
+  let total = 0;
+  for (const [id, count] of mounts) {
+    result[id] = count;
+    total += count;
+  }
+  return { total, mounts: result };
+}
+
+async function sampleListeners() {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5_000);
+    const res = await fetch(ICECAST_STATUS_URL, { signal: ctrl.signal });
+    clearTimeout(t);
+    if (!res.ok) return;
+    const html = await res.text();
+    const sample = parseListenerSamples(html);
+    const dir = path.join(DATA_DIR, "metrics");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `listeners-${todayStr()}.ndjson`);
+    fs.appendFileSync(
+      file,
+      JSON.stringify({ ts: new Date().toISOString(), total: sample.total, mounts: sample.mounts }) + "\n"
+    );
+  } catch {
+    // Skip silently on fetch or parse failure.
+  }
+}
+
+setTimeout(sampleListeners, LISTENER_SAMPLE_BOOT_DELAY_MS);
+setInterval(sampleListeners, LISTENER_SAMPLE_INTERVAL_MS);
+
 // Byte-counting middleware: count every byte written by the response.
 // Does not buffer; safe for the long-lived /stream proxy.
 app.use((req, res, next) => {
