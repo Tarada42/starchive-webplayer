@@ -48,7 +48,13 @@
       ".ax-live-label{font-size:.72rem;font-weight:700;letter-spacing:.08em;color:var(--red)}",
       ".ax-live-title{font-size:.9rem;color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
       ".ax-live-go{font-size:.8rem;color:var(--accent2)}",
-      ".ax-live-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.68rem;font-weight:700;line-height:1;min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}"
+      ".ax-live-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.68rem;font-weight:700;line-height:1;min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif}",
+      ".ax-genre-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 2px}",
+      ".ax-chip{border:1px solid var(--border);background:var(--surface);color:var(--text2);border-radius:999px;padding:5px 11px;font:inherit;font-size:.78rem;line-height:1.2;cursor:pointer;transition:.15s;white-space:nowrap}",
+      ".ax-chip:hover{color:var(--text);border-color:var(--accent)}",
+      ".ax-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}",
+      ".ax-chip .ax-n{opacity:.6;margin-left:5px;font-size:.72rem}",
+      ".ax-filter-note{margin-left:auto;font-size:.74rem;color:var(--text3)}"
     ].join("");
     var s = document.createElement("style");
     s.id = "ax-styles";
@@ -277,6 +283,156 @@
       .catch(function () {});
   }
 
+  // ---- genre browsing (multi-select) --------------------------------------
+  var GENRE_KEY = "starchive_genres";
+  var genreData = null;
+  var genreSel = [];
+  try { genreSel = JSON.parse(localStorage.getItem(GENRE_KEY) || "[]") || []; } catch (e) { genreSel = []; }
+  var genreStamp = 0;
+  var lastApply = "";
+
+  function loadGenres() {
+    if (genreData) return Promise.resolve(genreData);
+    return fetch("/genres.json")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { genreData = (d && d.artists) || {}; return genreData; })
+      .catch(function () { genreData = {}; return genreData; });
+  }
+
+  // Cards expose the artist as "andy gravity" (img alt) while genres.json keys are
+  // "andy_gravity" — compare on a stripped alphanumeric key.
+  function normKey(s) {
+    return String(s == null ? "" : s).toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  var genreIndex = null;
+  function genreIndexOf() {
+    if (genreIndex) return genreIndex;
+    genreIndex = Object.create(null);
+    Object.keys(genreData || {}).forEach(function (k) {
+      genreIndex[normKey(k)] = (genreData[k] && genreData[k].genres) || [];
+    });
+    return genreIndex;
+  }
+
+  function cardName(card) {
+    var img = card.querySelector("img[alt]");
+    if (img && img.getAttribute("alt")) return img.getAttribute("alt");
+    var t = card.textContent || "";
+    return t.trim().split("\n")[0];
+  }
+
+  function genresOf(name) {
+    return genreIndexOf()[normKey(name)] || [];
+  }
+
+  function saveGenreSel() {
+    try { localStorage.setItem(GENRE_KEY, JSON.stringify(genreSel)); } catch (e) {}
+  }
+
+  function makeChip(label, count, active, onClick) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "ax-chip" + (active ? " is-on" : "");
+    b.appendChild(document.createTextNode(label));
+    if (count != null) {
+      var n = document.createElement("span");
+      n.className = "ax-n";
+      n.textContent = String(count);
+      b.appendChild(n);
+    }
+    b.addEventListener("click", function (e) { e.preventDefault(); onClick(); });
+    return b;
+  }
+
+  function buildGenreBar() {
+    var list = document.querySelector(".artist-list");
+    var header = list && list.querySelector(".list-header-row");
+    if (!list || !header) return;
+
+    var bar = list.querySelector(".ax-genre-bar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.className = "ax-genre-bar";
+      header.parentNode.insertBefore(bar, header.nextSibling);
+    }
+
+    var counts = {};
+    var totalArtists = 0;
+    var cards = document.querySelectorAll(".artist-card");
+    for (var ci = 0; ci < cards.length; ci++) {
+      var g = genresOf(cardName(cards[ci]));
+      if (g.length) totalArtists++;
+      g.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+    }
+    var names = Object.keys(counts).sort(function (a, b) {
+      return counts[b] - counts[a] || a.localeCompare(b);
+    });
+
+    var sig = names.join("|") + "::" + genreSel.join(",") + "::" + totalArtists + "::" +
+      cards.length + "::" + (cards[0] ? cardName(cards[0]) : "");
+    if (bar.getAttribute("data-sig") === sig) return;
+    bar.setAttribute("data-sig", sig);
+    bar.innerHTML = "";
+
+    bar.appendChild(makeChip("All", cards.length, genreSel.length === 0, function () {
+      genreSel = [];
+      saveGenreSel();
+      lastApply = "";
+      buildGenreBar();
+      applyGenreFilter();
+    }));
+
+    names.forEach(function (g) {
+      var on = genreSel.indexOf(g) !== -1;
+      bar.appendChild(makeChip(g, counts[g], on, function () {
+        var i = genreSel.indexOf(g);
+        if (i === -1) genreSel.push(g); else genreSel.splice(i, 1);
+        saveGenreSel();
+        lastApply = "";
+        buildGenreBar();
+        applyGenreFilter();
+      }));
+    });
+
+    var note = document.createElement("div");
+    note.className = "ax-filter-note";
+    bar.appendChild(note);
+  }
+
+  function applyGenreFilter() {
+    var cards = document.querySelectorAll(".artist-card");
+    var shown = 0;
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      var g = genresOf(cardName(c));
+      var ok = genreSel.length === 0 || g.some(function (x) { return genreSel.indexOf(x) !== -1; });
+      c.style.display = ok ? "" : "none";
+      c.__axFiltered = true;
+      if (ok) shown++;
+    }
+    var note = document.querySelector(".ax-filter-note");
+    if (note) {
+      note.textContent = genreSel.length
+        ? "Showing " + shown + " of " + cards.length
+        : "";
+    }
+  }
+
+  function genreTick() {
+    if (!genreData) return;
+    if (!document.querySelector(".artist-list")) return;
+    buildGenreBar();
+    var cards = document.querySelectorAll(".artist-card");
+    var first = cards[0];
+    var sig = genreSel.join(",") + "|" + cards.length + "|" + (first && first.__axFiltered ? "same" : "new");
+    if (sig !== lastApply) {
+      lastApply = sig;
+      applyGenreFilter();
+    }
+  }
+  // -------------------------------------------------------------------------
+
   function sync() {
     var dj = currentDj();
     if (!dj) return;
@@ -302,12 +458,18 @@
   var timer = null;
   function schedule() {
     if (timer) return;
-    timer = setTimeout(function () { timer = null; sync(); ensureLiveBadge(liveCount); }, 80);
+    timer = setTimeout(function () {
+      timer = null;
+      sync();
+      ensureLiveBadge(liveCount);
+      genreTick();
+    }, 80);
   }
 
   injectStyles();
   refreshLiveBadge();
   setInterval(refreshLiveBadge, 60000);
+  loadGenres().then(function () { genreTick(); });
 
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule);
