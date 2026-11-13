@@ -4,7 +4,9 @@
     "burner71": {
       "base": "https://burner71.streambox.space",
       "folder": "",
-      "neverLive": true
+      "neverLive": true,
+      "useArtistArtwork": true,
+      "tribute": "In tribute to a fallen member, you were loved and now missed."
     }
   }
 }

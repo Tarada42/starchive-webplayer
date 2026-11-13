@@ -58,7 +58,9 @@
       ".ax-filter-note{margin-left:auto;font-size:.74rem;color:var(--text3)}",
       ".ax-genres{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}",
       ".ax-genre-tag{font-size:.72rem;line-height:1;padding:5px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:.15s}",
-      ".ax-genre-tag:hover{color:var(--text);border-color:var(--accent)}"
+      ".ax-genre-tag:hover{color:var(--text);border-color:var(--accent)}",
+      ".artist-hero-name{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 14px}",
+      ".ax-tribute{font-size:.74rem;font-weight:400;font-style:italic;letter-spacing:0;text-transform:none;color:var(--text3);line-height:1.35;max-width:520px}"
     ].join("");
     var s = document.createElement("style");
     s.id = "ax-styles";
@@ -209,7 +211,10 @@
   function currentDj() {
     var h2 = document.querySelector(".artist-hero-name");
     if (!h2) return null;
-    var t = (h2.textContent || "").trim().toLowerCase();
+    var clone = h2.cloneNode(true);
+    var tag = clone.querySelector(".ax-tribute");
+    if (tag) tag.remove();
+    var t = (clone.textContent || "").trim().toLowerCase();
     return /^[a-z0-9_]+$/.test(t) ? t : null;
   }
 
@@ -291,6 +296,37 @@
         ensureLiveBadge(liveCount);
       })
       .catch(function () {});
+  }
+
+  // ---- tribute line (artist-sources.json -> "tribute") --------------------
+  var sourcesData = null;
+  var sourcesPromise = null;
+
+  function loadSources() {
+    if (sourcesPromise) return sourcesPromise;
+    sourcesPromise = fetch("/artist-sources.json")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { sourcesData = (d && d.artists) || {}; return sourcesData; })
+      .catch(function () { sourcesData = {}; return sourcesData; });
+    return sourcesPromise;
+  }
+
+  function ensureTribute(dj) {
+    if (!sourcesData) return;
+    var cfg = sourcesData[String(dj).toLowerCase()];
+    var text = cfg && cfg.tribute;
+    var h = document.querySelector(".artist-hero-name");
+    if (!h) return;
+    var existing = h.querySelector(".ax-tribute");
+    if (!text) { if (existing) existing.remove(); return; }
+    if (existing) {
+      if (existing.textContent !== text) existing.textContent = text;
+      return;
+    }
+    var s = document.createElement("span");
+    s.className = "ax-tribute";
+    s.textContent = text;
+    h.appendChild(s);
   }
 
   // ---- genre browsing (multi-select) --------------------------------------
@@ -501,6 +537,8 @@
       sync();
       ensureLiveBadge(liveCount);
       genreTick();
+      var d = currentDj();
+      if (d) ensureTribute(d);
     }, 80);
   }
 
@@ -508,6 +546,7 @@
   refreshLiveBadge();
   setInterval(refreshLiveBadge, 60000);
   loadGenres().then(function () { genreTick(); });
+  loadSources().then(function () { var d = currentDj(); if (d) ensureTribute(d); });
 
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule);

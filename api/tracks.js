@@ -8,7 +8,7 @@ import path from "path";
 // Some artists (e.g. burner71, a tribute archive) live on their own host instead of
 // the main archive. Configured in artist-sources.json.
 function sourceFor(artist) {
-  const fallback = { base: BASE, folder: encodeURIComponent(artist), neverLive: false };
+  const fallback = { base: BASE, folder: encodeURIComponent(artist), neverLive: false, useArtistArtwork: false };
   try {
     const p = path.join(process.cwd(), "artist-sources.json");
     if (!fs.existsSync(p)) return fallback;
@@ -19,9 +19,21 @@ function sourceFor(artist) {
       base: String(cfg.base).replace(/\/$/, ""),
       folder: cfg.folder == null ? "" : String(cfg.folder),
       neverLive: !!cfg.neverLive,
+      useArtistArtwork: !!cfg.useArtistArtwork,
     };
   } catch (e) {
     return fallback;
+  }
+}
+
+function artistArtwork(artist) {
+  try {
+    const p = path.join(process.cwd(), "avatars.json");
+    if (!fs.existsSync(p)) return null;
+    const d = JSON.parse(fs.readFileSync(p, "utf8"));
+    return d[artist] || d[String(artist).toLowerCase()] || null;
+  } catch (e) {
+    return null;
   }
 }
 
@@ -120,6 +132,8 @@ export default async function handler(req, res) {
         c[1].replace(/<[^>]+>/g, "").trim()
       );
       const ts = /(\d{4}-\d{2}-\d{2}-\d{2}-\d{2})/.exec(filename)?.[1] || "";
+      // Some sources have no thumbnails/ folder at all: use the artist artwork instead.
+      const art = src.useArtistArtwork ? artistArtwork(artist) : null;
       const id = `${artist}__${filename}`;
       tracks.push({
         id,
@@ -127,8 +141,8 @@ export default async function handler(req, res) {
         filename,
         title: titleFromName(filename),
         url: `${src.base}/${src.folder ? encodeURIComponent(src.folder) + "/" : ""}${filename}`,
-        thumbnailUrl: ts ? `${BASE}/thumbnails/${artist}_${ts}.jpg` : null,
-        pictureUrl: ts ? `${BASE}/thumbnails/${artist}_picture_${ts}.jpg` : null,
+        thumbnailUrl: art || (ts ? `${BASE}/thumbnails/${artist}_${ts}.jpg` : null),
+        pictureUrl: art || (ts ? `${BASE}/thumbnails/${artist}_picture_${ts}.jpg` : null),
         size: prettySize(parseSize(cells[1])),
         date: dateField(filename),
         index: idx++,
