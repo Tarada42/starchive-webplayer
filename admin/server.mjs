@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import fs from "fs";
 
 import { createAuth } from "./auth.mjs";
+import { verifyAccessJwt, createJwksFetcher } from "./access.mjs";
 import artistsHandler from "../api/artists.js";
 import liveHandler from "../api/live.js";
 
@@ -30,6 +31,24 @@ function readJsonLines(p) {
       return null;
     }
   });
+}
+
+function readJsonSafe(p, fallback) {
+  try {
+    if (!fs.existsSync(p)) return fallback;
+    return JSON.parse(fs.readFileSync(p, "utf8"));
+  } catch (e) {
+    console.error("Failed to read JSON:", p, e.message);
+    return fallback;
+  }
+}
+
+function writeJsonAtomic(p, data) {
+  const dir = path.dirname(p);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  const tmp = `${p}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, p);
 }
 
 // Call a Vercel-style handler and capture its JSON response.
@@ -73,6 +92,53 @@ export function createAdminApp({ dataDir }) {
   const auth = createAuth({ dataDir });
   const app = express();
 
+  const accessIssuerPath = path.join(dataDir, "access-issuer.json");
+  let pinnedIssuer = readJsonSafe(accessIssuerPath, { issuer: null }).issuer;
+  let pinPromise = null;
+  const jwksFetcher = createJwksFetcher();
+  const allowPasswordLogin = () => process.env.ALLOW_PASSWORD_LOGIN === "1";
+
+  function rejectAccess(req, res) {
+    if (req.path.startsWith("/api/")) {
+      return res.status(401).json({ error: "Cloudflare identity rejected" });
+    }
+    return res.status(403).type("text/plain").send("Cloudflare identity rejected");
+  }
+
+  function ensureAccessSession(req, res) {
+    if (!req.accessEmail) return;
+    let s = auth.getSession(req);
+    if (!s) {
+      const created = auth.createSession(req.accessEmail);
+      res.cookie("sid", created.cookieValue, auth.cookieOptions(req));
+      // res.cookie only queues the header, so req.cookies still holds the old
+      // (absent) value on this request — use the session we just created.
+      s = created.session;
+    } else if (s.user !== req.accessEmail) {
+      s.user = req.accessEmail;
+    }
+    req.session = s;
+  }
+
+  function requireAccessOrSession(req, res, next) {
+    auth.sweepSessions();
+
+    if (req.accessEmail) {
+      ensureAccessSession(req, res);
+      return next();
+    }
+
+    if (allowPasswordLogin()) {
+      const s = auth.getSession(req);
+      if (s) {
+        req.session = s;
+        return next();
+      }
+    }
+
+    return rejectAccess(req, res);
+  }
+
   app.use((_req, res, next) => {
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-Content-Type-Options", "nosniff");
@@ -108,6 +174,44 @@ export function createAdminApp({ dataDir }) {
     next();
   });
 
+  // Cloudflare Access JWT verification.
+  app.use(async (req, res, next) => {
+    const token = req.headers["cf-access-jwt-assertion"];
+    if (!token) return next();
+
+    try {
+      const result = await verifyAccessJwt(token, { jwksFetcher });
+      if (!result) return rejectAccess(req, res);
+
+      if (pinnedIssuer && result.iss !== pinnedIssuer) return rejectAccess(req, res);
+
+      if (!pinnedIssuer) {
+        // Serialise the first pin so two concurrent requests with different (both
+        // valid-looking) issuers cannot race and leave the loser's issuer pinned.
+        if (!pinPromise) {
+          pinPromise = Promise.resolve().then(() => {
+            if (pinnedIssuer) return;
+            pinnedIssuer = result.iss;
+            writeJsonAtomic(accessIssuerPath, { issuer: pinnedIssuer });
+          });
+        }
+        await pinPromise;
+        if (pinnedIssuer !== result.iss) return rejectAccess(req, res);
+      }
+
+      req.accessEmail = result.email;
+      next();
+    } catch {
+      return rejectAccess(req, res);
+    }
+  });
+
+  // Auto-provision a signed session from a verified Cloudflare identity.
+  app.use((req, res, next) => {
+    ensureAccessSession(req, res);
+    next();
+  });
+
   // Request logging.
   app.use((req, _res, next) => {
     console.log(`[admin ${new Date().toISOString()}] ${req.method} ${req.path}`);
@@ -129,6 +233,9 @@ export function createAdminApp({ dataDir }) {
 
   // Public auth endpoints.
   app.post("/login", async (req, res) => {
+    if (!allowPasswordLogin()) {
+      return res.status(403).json({ error: "Password login is disabled" });
+    }
     const { user, password } = req.body || {};
     if (typeof user !== "string" || typeof password !== "string") {
       return res.status(400).json({ error: "Invalid credentials" });
@@ -145,11 +252,16 @@ export function createAdminApp({ dataDir }) {
     return res.redirect("/");
   });
 
-  // All remaining routes require an authenticated session.
-  app.use(auth.requireAuth);
+  // All remaining routes require Cloudflare Access or a password session.
+  app.use(requireAccessOrSession);
 
   app.get("/api/admin/me", (req, res) => {
-    res.status(200).json({ user: req.session.user, csrf: req.session.csrf });
+    if (!req.session) return res.status(401).json({ error: "Unauthorized" });
+    res.status(200).json({
+      user: req.session.user,
+      csrf: req.session.csrf,
+      passwordLogin: allowPasswordLogin(),
+    });
   });
 
   app.post("/logout", auth.requireCsrf, (req, res) => {

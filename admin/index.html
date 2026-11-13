@@ -122,7 +122,10 @@
         <span class="logo-mark">ST</span>
         <h1>STArchive Admin</h1>
       </div>
-      <form id="login-form" class="login-form" novalidate>
+      <div class="cloudflare-card hidden" id="cloudflare-card">
+        <p>Cloudflare session not detected — reload this page from <a href="https://webappadmin.perker.dk" target="_blank" rel="noopener noreferrer">https://webappadmin.perker.dk</a>.</p>
+      </div>
+      <form id="login-form" class="login-form hidden" novalidate>
         <label for="login-user">User</label>
         <input id="login-user" name="user" type="text" autocomplete="username" required />
         <label for="login-password">Password</label>

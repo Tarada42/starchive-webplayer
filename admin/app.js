@@ -8,6 +8,7 @@ const els = {
   app: document.getElementById("app"),
   loginOverlay: document.getElementById("login-overlay"),
   loginForm: document.getElementById("login-form"),
+  cloudflareCard: document.getElementById("cloudflare-card"),
   loginUser: document.getElementById("login-user"),
   loginPassword: document.getElementById("login-password"),
   loginError: document.getElementById("login-error"),
@@ -42,9 +43,19 @@ async function api(url, options = {}) {
 }
 
 function showLogin() {
+  showCloudflareCard(true);
+  els.loginUser.focus();
+}
+
+function showCloudflareCard(passwordLogin) {
   els.loginOverlay.classList.remove("hidden");
   els.app.classList.add("hidden");
-  els.loginUser.focus();
+  els.cloudflareCard.classList.remove("hidden");
+  if (passwordLogin) {
+    els.loginForm.classList.remove("hidden");
+  } else {
+    els.loginForm.classList.add("hidden");
+  }
 }
 
 function showApp(user) {
@@ -58,8 +69,9 @@ function showApp(user) {
 async function loadSession() {
   try {
     const res = await fetch(`${API_PREFIX}/me`);
-    if (res.status === 401) {
-      showLogin();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showCloudflareCard(data.passwordLogin === true);
       return false;
     }
     const data = await res.json();
@@ -67,7 +79,7 @@ async function loadSession() {
     showApp(data.user);
     return true;
   } catch (e) {
-    showLogin();
+    showCloudflareCard(false);
     return false;
   }
 }

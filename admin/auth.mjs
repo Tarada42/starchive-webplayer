@@ -146,6 +146,14 @@ export function createAuth({ dataDir }) {
     return s;
   }
 
+  function createSession(user) {
+    const sid = randomHex(32);
+    const csrf = randomHex(32);
+    const session = { user, csrf, lastSeen: Date.now() };
+    sessions.set(sid, session);
+    return { sid, cookieValue: signSid(sid), csrf, user, session };
+  }
+
   function requireAuth(req, res, next) {
     sweepSessions();
     const s = getSession(req);
@@ -212,6 +220,8 @@ export function createAuth({ dataDir }) {
     attemptLogin,
     logout,
     getSession,
+    createSession,
+    sweepSessions,
     getIp,
   };
 }

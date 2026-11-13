@@ -356,6 +356,26 @@ body {
   font-size: 0.9rem;
 }
 
+.cloudflare-card {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 10px;
+}
+
+.cloudflare-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.cloudflare-card a {
+  color: var(--accent-2);
+  word-break: break-all;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .stat-grid {
