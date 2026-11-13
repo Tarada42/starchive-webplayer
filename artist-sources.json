@@ -1,0 +1,10 @@
+{
+  "_comment": "Per-artist storage overrides. burner71 is a tribute archive on its own host: never live, never updated.",
+  "artists": {
+    "burner71": {
+      "base": "https://burner71.streambox.space",
+      "folder": "",
+      "neverLive": true
+    }
+  }
+}

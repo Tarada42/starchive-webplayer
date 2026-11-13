@@ -1,4 +1,8 @@
 {
-  "excluded": ["woolies", "nickthed"],
+  "excluded": [
+    "woolies",
+    "nickthed",
+    "burner71"
+  ],
   "_comment": "Non-music streamers: hidden from /api/live (live page, sidebar badge, app) but kept everywhere else. Match on Icecast mount id, case-insensitive."
 }

@@ -5,6 +5,26 @@ const BASE = "https://starchive.streambox.space";
 import fs from "fs";
 import path from "path";
 
+// Some artists (e.g. burner71, a tribute archive) live on their own host instead of
+// the main archive. Configured in artist-sources.json.
+function sourceFor(artist) {
+  const fallback = { base: BASE, folder: encodeURIComponent(artist), neverLive: false };
+  try {
+    const p = path.join(process.cwd(), "artist-sources.json");
+    if (!fs.existsSync(p)) return fallback;
+    const d = JSON.parse(fs.readFileSync(p, "utf8"));
+    const cfg = (d.artists || {})[String(artist).toLowerCase()];
+    if (!cfg || !cfg.base) return fallback;
+    return {
+      base: String(cfg.base).replace(/\/$/, ""),
+      folder: cfg.folder == null ? "" : String(cfg.folder),
+      neverLive: !!cfg.neverLive,
+    };
+  } catch (e) {
+    return fallback;
+  }
+}
+
 function isHidden(artistId) {
   try {
     const p = path.join(process.cwd(), "hidden.json");
@@ -81,7 +101,11 @@ export default async function handler(req, res) {
   if (!artist) return res.status(400).json({ error: "artist required" });
   if (isHidden(artist)) return res.status(200).json([]);
   try {
-    const r = await fetch(`${BASE}/${encodeURIComponent(artist)}/`, { headers: { "User-Agent": "starchive-api/1.0" } });
+    const src = sourceFor(artist);
+    const listingUrl = src.folder
+      ? `${src.base}/${encodeURIComponent(src.folder)}/`
+      : `${src.base}/`;
+    const r = await fetch(listingUrl, { headers: { "User-Agent": "starchive-api/1.0" } });
     const html = await r.text();
     const tracks = [];
     const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
@@ -102,7 +126,7 @@ export default async function handler(req, res) {
         artist,
         filename,
         title: titleFromName(filename),
-        url: `${BASE}/${encodeURIComponent(artist)}/${filename}`,
+        url: `${src.base}/${src.folder ? encodeURIComponent(src.folder) + "/" : ""}${filename}`,
         thumbnailUrl: ts ? `${BASE}/thumbnails/${artist}_${ts}.jpg` : null,
         pictureUrl: ts ? `${BASE}/thumbnails/${artist}_picture_${ts}.jpg` : null,
         size: prettySize(parseSize(cells[1])),
@@ -114,7 +138,7 @@ export default async function handler(req, res) {
 
     // A live DJ's newest file is still being written to - it cannot be played, so
     // never offer it as an archive track. The artist page shows a LIVE entry instead.
-    const live = await isArtistLive(artist);
+    const live = src.neverLive ? false : await isArtistLive(artist);
     if (live && tracks.length) {
       tracks.shift();
       tracks.forEach((t, i) => { t.index = i; });
