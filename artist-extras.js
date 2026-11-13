@@ -55,7 +55,10 @@
       ".ax-chip:hover{color:var(--text);border-color:var(--accent)}",
       ".ax-chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff}",
       ".ax-chip .ax-n{opacity:.6;margin-left:5px;font-size:.72rem}",
-      ".ax-filter-note{margin-left:auto;font-size:.74rem;color:var(--text3)}"
+      ".ax-filter-note{margin-left:auto;font-size:.74rem;color:var(--text3)}",
+      ".ax-genres{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}",
+      ".ax-genre-tag{font-size:.72rem;line-height:1;padding:5px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:.15s}",
+      ".ax-genre-tag:hover{color:var(--text);border-color:var(--accent)}"
     ].join("");
     var s = document.createElement("style");
     s.id = "ax-styles";
@@ -152,6 +155,11 @@
     meta.appendChild(link);
 
     if (meta.children.length) block.appendChild(meta);
+
+    var genreSlot = document.createElement("div");
+    genreSlot.className = "ax-genre-slot";
+    block.appendChild(genreSlot);
+    genreTagsFor(genreSlot, dj);
 
     var bioText = (data.bio || "").trim();
     if (bioText) {
@@ -433,6 +441,34 @@
       applyGenreFilter();
     }
   }
+  function paintGenreTags(slot, dj) {
+    if (!slot || !slot.isConnected) return;
+    var g = genresOf(dj);
+    if (!g.length) return;
+    slot.textContent = "";
+    var row = document.createElement("div");
+    row.className = "ax-genres";
+    g.forEach(function (name) {
+      var a = document.createElement("a");
+      a.className = "ax-genre-tag";
+      a.href = "/";
+      a.textContent = name;
+      a.title = "Browse " + name + " DJs";
+      a.addEventListener("click", function (e) {
+        e.preventDefault();
+        try { localStorage.setItem("starchive_genres", JSON.stringify([name])); } catch (err) {}
+        window.location.href = "/";
+      });
+      row.appendChild(a);
+    });
+    slot.appendChild(row);
+  }
+
+  function genreTagsFor(slot, dj) {
+    if (genreData) { paintGenreTags(slot, dj); return; }
+    loadGenres().then(function () { paintGenreTags(slot, dj); });
+  }
+
   // -------------------------------------------------------------------------
 
   function sync() {
