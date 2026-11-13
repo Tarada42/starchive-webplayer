@@ -31,7 +31,8 @@
       ".ax-meta{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text2);flex-wrap:wrap}",
       ".ax-since{color:var(--text2)}",
       ".ax-dot{width:3px;height:3px;border-radius:50%;background:var(--text3);display:inline-block}",
-      ".ax-twitch{color:var(--accent2);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}",
+      ".ax-twitch{display:inline-flex;align-items:center;gap:6px;color:var(--accent2);text-decoration:none;border-bottom:1px solid transparent;transition:.15s}",
+      ".ax-twitch svg{width:15px;height:15px;flex:0 0 auto}",
       ".ax-twitch:hover{color:var(--text);border-bottom-color:var(--accent2)}",
       ".ax-bio{margin:0;font-size:.85rem;line-height:1.5;color:var(--text2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}",
       ".ax-bio.is-open{display:block;-webkit-line-clamp:unset;overflow:visible}",
@@ -146,7 +147,8 @@
     link.href = twitchUrl;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
-    link.textContent = "twitch.tv/" + dj;
+    if (ICONS.twitch) link.appendChild(svgFromPath(ICONS.twitch));
+    link.appendChild(document.createTextNode("twitch.tv/" + dj));
     meta.appendChild(link);
 
     if (meta.children.length) block.appendChild(meta);
@@ -172,7 +174,7 @@
       });
     }
 
-    var keys = Object.keys(socials).filter(function (k) { return socials[k]; });
+    var keys = Object.keys(socials).filter(function (k) { return socials[k] && k !== "twitch"; });
     if (keys.length) {
       var row = document.createElement("div");
       row.className = "ax-socials";
