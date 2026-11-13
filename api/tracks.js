@@ -16,6 +16,21 @@ function isHidden(artistId) {
   return false;
 }
 
+// The archive listing reports sizes as text ("33.2 MiB", "733.0 KiB"). Parsing the
+// number alone and treating it as bytes turned every file into "33.0 B".
+function parseSize(text) {
+  const m = /([\d.,]+)\s*(B|KiB|MiB|GiB|TiB|KB|MB|GB|TB)/i.exec(String(text || ""));
+  if (!m) return 0;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  if (!isFinite(n)) return 0;
+  const mult = {
+    b: 1,
+    kb: 1000, mb: 1e6, gb: 1e9, tb: 1e12,
+    kib: 1024, mib: 1024 ** 2, gib: 1024 ** 3, tib: 1024 ** 4,
+  }[m[2].toLowerCase()] || 1;
+  return Math.round(n * mult);
+}
+
 function prettySize(bytes) {
   if (!bytes || bytes <= 0) return "";
   const units = ["B", "KiB", "MiB", "GiB"];
@@ -90,7 +105,7 @@ export default async function handler(req, res) {
         url: `${BASE}/${encodeURIComponent(artist)}/${filename}`,
         thumbnailUrl: ts ? `${BASE}/thumbnails/${artist}_${ts}.jpg` : null,
         pictureUrl: ts ? `${BASE}/thumbnails/${artist}_picture_${ts}.jpg` : null,
-        size: prettySize(parseInt(cells[1] || "0", 10)),
+        size: prettySize(parseSize(cells[1])),
         date: dateField(filename),
         index: idx++,
       });
