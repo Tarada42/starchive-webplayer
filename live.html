@@ -158,7 +158,14 @@
       .watch-twitch { display: inline-block; }
       .status-text { color: var(--text2); font-size: 0.75rem; margin-top: 6px; min-height: 1.2em; }
       .status-text.unavailable { color: var(--red); }
-      .player-btn { background: transparent; color: var(--accent2); cursor: pointer; font: inherit; }
+      .player-bar { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+      .pb-btn { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+        background: var(--surface); color: var(--text); display: inline-flex; align-items: center;
+        justify-content: center; cursor: pointer; transition: .15s; padding: 0; }
+      .pb-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent2); }
+      .pb-btn:disabled { opacity: .35; cursor: default; }
+      .pb-stop { color: var(--text2); }
+      .pb-vol { width: 92px; accent-color: var(--accent2); cursor: pointer; margin-left: 2px; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .empty-emoji { color: var(--text3); margin-bottom: 14px; display: flex; justify-content: center; }
@@ -345,14 +352,25 @@
       function updatePlayerUI(card, state, attempt) {
         if (!card) return;
         const status = card.querySelector(".status-text");
-        const btn = card.querySelector(".player-btn");
-        const isActive = state === "playing" || state === "reconnecting";
-        card.classList.toggle("is-playing-target", isActive);
-        if (btn) btn.textContent = isActive ? "Stop" : "Play";
+        const playBtn = card.querySelector(".pb-play");
+        const stopBtn = card.querySelector(".pb-stop");
+        const active = state === "playing" || state === "reconnecting";
+        const canStop = active || state === "paused";
+        card.classList.toggle("is-playing-target", active);
+        if (playBtn) {
+          const showPause = active;
+          playBtn.innerHTML = showPause
+            ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>'
+            : '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+          playBtn.setAttribute("aria-label", showPause ? "Pause" : "Play");
+          playBtn.title = showPause ? "Pause" : "Play";
+        }
+        if (stopBtn) stopBtn.disabled = !canStop;
         if (!status) return;
         status.classList.toggle("unavailable", state === "unavailable");
         if (state === "playing") status.textContent = "Playing";
         else if (state === "reconnecting") status.textContent = "Reconnecting… (" + attempt + "/3)";
+        else if (state === "paused") status.textContent = "Paused";
         else if (state === "stopped") status.textContent = "Stopped";
         else if (state === "unavailable") status.textContent = "Stream unavailable — press Play to retry";
       }
@@ -569,9 +587,49 @@
         info.appendChild(stats);
 
         const audio = document.createElement("audio");
-        audio.controls = true;
         audio.preload = "none";
         audio.src = "/stream/" + encodeURIComponent(dj.id);
+        audio.style.display = "none";
+
+        // Custom transport: native controls cannot host a Stop button beside pause.
+        const ICON_PLAY = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+        const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+        const ICON_STOP = '<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>';
+
+        const bar = document.createElement("div");
+        bar.className = "player-bar";
+
+        const playPauseBtn = document.createElement("button");
+        playPauseBtn.type = "button";
+        playPauseBtn.className = "pb-btn pb-play";
+        playPauseBtn.setAttribute("aria-label", "Play");
+        playPauseBtn.title = "Play";
+        playPauseBtn.innerHTML = ICON_PLAY;
+
+        const stopBtn = document.createElement("button");
+        stopBtn.type = "button";
+        stopBtn.className = "pb-btn pb-stop";
+        stopBtn.setAttribute("aria-label", "Stop");
+        stopBtn.title = "Stop the stream (ends the connection)";
+        stopBtn.innerHTML = ICON_STOP;
+        stopBtn.disabled = true;
+
+        const vol = document.createElement("input");
+        vol.type = "range";
+        vol.min = "0";
+        vol.max = "1";
+        vol.step = "0.05";
+        vol.value = "1";
+        vol.className = "pb-vol";
+        vol.setAttribute("aria-label", "Volume");
+        vol.addEventListener("input", function () {
+          audio.volume = Number(vol.value);
+        });
+
+        bar.appendChild(playPauseBtn);
+        bar.appendChild(stopBtn);
+        bar.appendChild(vol);
+        info.appendChild(bar);
         info.appendChild(audio);
 
         const statusText = document.createElement("div");
@@ -583,14 +641,30 @@
           if (activeAudio !== audio || !audio._isPlaying) startCard(audio, dj.id);
         });
         audio.addEventListener("pause", function () {
-          if (audio._reconnecting) return;
-          if (activeAudio === audio && audio._isPlaying && !audio._userStopped) stopCard(audio);
+          if (audio._reconnecting || audio._userStopped) return;
+          if (activeAudio !== audio || !audio._isPlaying) return;
+          // Pause keeps the connection and buffer; only Stop tears it down.
+          audio._isPlaying = false;
+          clearWatchdog(audio);
+          updatePlayerUI(audio.closest(".dj-card"), "paused");
         });
         audio.addEventListener("playing", function () {
           if (activeAudio !== audio || !audio._isPlaying || audio._userStopped) return;
           audio._attempts = 0;
           updatePlayerUI(audio.closest(".dj-card"), "playing");
         });
+        playPauseBtn.addEventListener("click", function () {
+          if (activeAudio === audio && audio._isPlaying && !audio.paused) {
+            audio.pause();                    // -> paused state, stream kept alive
+          } else {
+            startCard(audio, dj.id);
+          }
+        });
+
+        stopBtn.addEventListener("click", function () {
+          stopCard(audio);                    // -> real teardown
+        });
+
         audio.addEventListener("stalled", function () {
           // Buffering events also fire on a normal start: require a real stall first.
           if (!isWarmingUp(audio) && audio._lastProgressAt && Date.now() - audio._lastProgressAt >= 6000) {
@@ -627,21 +701,11 @@
         chat.title = "Open Twitch chat for " + dj.id;
         chat.addEventListener("click", function (e) { openTwitchChat(dj.id, e); });
 
-        const playBtn = document.createElement("button");
-        playBtn.type = "button";
-        playBtn.className = "open-external player-btn";
-        playBtn.textContent = "Play";
-        playBtn.addEventListener("click", function () {
-          if (activeAudio === audio && audio._isPlaying && !audio._userStopped) stopCard(audio);
-          else startCard(audio, dj.id);
-        });
-
         const actions = document.createElement("div");
         actions.className = "card-actions";
         actions.appendChild(ext);
         actions.appendChild(twitch);
         actions.appendChild(chat);
-        actions.appendChild(playBtn);
         info.appendChild(actions);
 
         card.appendChild(img);
