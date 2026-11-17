@@ -166,6 +166,8 @@
       .pb-btn:disabled { opacity: .35; cursor: default; }
       .pb-stop { color: var(--text2); }
       .pb-vol { width: 92px; accent-color: var(--accent2); cursor: pointer; margin-left: 2px; }
+      .pb-time { margin-left: auto; font-size: .78rem; color: var(--text2);
+        font-variant-numeric: tabular-nums; letter-spacing: .02em; min-width: 42px; text-align: right; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .empty-emoji { color: var(--text3); margin-bottom: 14px; display: flex; justify-content: center; }
@@ -366,6 +368,8 @@
           playBtn.title = showPause ? "Pause" : "Play";
         }
         if (stopBtn) stopBtn.disabled = !canStop;
+        const timeEl = card.querySelector(".pb-time");
+        if (timeEl && (state === "stopped" || state === "unavailable")) timeEl.textContent = "0:00";
         if (!status) return;
         status.classList.toggle("unavailable", state === "unavailable");
         if (state === "playing") status.textContent = "Playing";
@@ -626,9 +630,15 @@
           audio.volume = Number(vol.value);
         });
 
+        const timeEl = document.createElement("span");
+        timeEl.className = "pb-time";
+        timeEl.textContent = "0:00";
+        timeEl.setAttribute("aria-label", "Elapsed playback time");
+
         bar.appendChild(playPauseBtn);
         bar.appendChild(stopBtn);
         bar.appendChild(vol);
+        bar.appendChild(timeEl);
         info.appendChild(bar);
         info.appendChild(audio);
 
@@ -653,6 +663,16 @@
           audio._attempts = 0;
           updatePlayerUI(audio.closest(".dj-card"), "playing");
         });
+        audio.addEventListener("timeupdate", function () {
+          const t = Math.max(0, Math.floor(audio.currentTime || 0));
+          const h = Math.floor(t / 3600);
+          const m = Math.floor((t % 3600) / 60);
+          const sec = t % 60;
+          timeEl.textContent = h > 0
+            ? h + ":" + String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0")
+            : m + ":" + String(sec).padStart(2, "0");
+        });
+
         playPauseBtn.addEventListener("click", function () {
           if (activeAudio === audio && audio._isPlaying && !audio.paused) {
             audio.pause();                    // -> paused state, stream kept alive
