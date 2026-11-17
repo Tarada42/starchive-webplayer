@@ -232,7 +232,7 @@ app.post(
     }
 
     const body = req.body || {};
-    const allowedTypes = new Set(["play", "favorite", "unfavorite", "live_play", "page"]);
+    const allowedTypes = new Set(["play", "favorite", "unfavorite", "live_play", "page", "stream_stall"]);
     const type = allowedTypes.has(body.type) ? body.type : null;
     if (!type) {
       return res.status(400).json({ error: "Invalid event type" });

@@ -156,6 +156,9 @@
       .card-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
       .card-actions .open-external { margin-top: 0; }
       .watch-twitch { display: inline-block; }
+      .status-text { color: var(--text2); font-size: 0.75rem; margin-top: 6px; min-height: 1.2em; }
+      .status-text.unavailable { color: var(--red); }
+      .player-btn { background: transparent; color: var(--accent2); cursor: pointer; font: inherit; }
       audio { width: 100%; height: 40px; border-radius: 8px; }
       .empty { text-align: center; color: var(--text2); padding: 48px 0; }
       .empty-emoji { color: var(--text3); margin-bottom: 14px; display: flex; justify-content: center; }
@@ -323,6 +326,146 @@
       let modalCurrentDj = null;
       let modalRefreshTimer = null;
       let modalTrigger = null;
+      let activeAudio = null;
+
+      function clearWatchdog(audio) {
+        if (audio && audio._watchdogTimer) {
+          clearInterval(audio._watchdogTimer);
+          audio._watchdogTimer = null;
+        }
+      }
+
+      function clearReconnect(audio) {
+        if (audio && audio._reconnectTimer) {
+          clearTimeout(audio._reconnectTimer);
+          audio._reconnectTimer = null;
+        }
+      }
+
+      function updatePlayerUI(card, state, attempt) {
+        if (!card) return;
+        const status = card.querySelector(".status-text");
+        const btn = card.querySelector(".player-btn");
+        const isActive = state === "playing" || state === "reconnecting";
+        card.classList.toggle("is-playing-target", isActive);
+        if (btn) btn.textContent = isActive ? "Stop" : "Play";
+        if (!status) return;
+        status.classList.toggle("unavailable", state === "unavailable");
+        if (state === "playing") status.textContent = "Playing";
+        else if (state === "reconnecting") status.textContent = "Reconnecting… (" + attempt + "/3)";
+        else if (state === "stopped") status.textContent = "Stopped";
+        else if (state === "unavailable") status.textContent = "Stream unavailable — press Play to retry";
+      }
+
+      function sendStallBeacon(artist, reason) {
+        const body = JSON.stringify({ type: "stream_stall", artist: artist || "", track: reason });
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon("/api/events", new Blob([body], { type: "application/json" }));
+          } else {
+            fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+          }
+        } catch (e) {}
+      }
+
+      function scheduleReconnect(audio, reason) {
+        if (activeAudio !== audio || !audio._isPlaying || audio._userStopped) return;
+        if (audio._reconnectTimer) return;
+        if (audio._attempts >= 3) {
+          clearWatchdog(audio);
+          audio._isPlaying = false;
+          if (activeAudio === audio) activeAudio = null;
+          try { audio.pause(); } catch (e) {}
+          audio.removeAttribute("src");
+          audio.load();
+          updatePlayerUI(audio.closest(".dj-card"), "unavailable");
+          return;
+        }
+        audio._attempts += 1;
+        updatePlayerUI(audio.closest(".dj-card"), "reconnecting", audio._attempts);
+        sendStallBeacon(audio._djId, reason);
+        const delays = [300, 900, 2000];
+        const delay = delays[audio._attempts - 1] || 2000;
+        audio._reconnectTimer = setTimeout(() => {
+          audio._reconnectTimer = null;
+          clearWatchdog(audio);
+          audio._reconnecting = true;
+          try { audio.pause(); } catch (e) {}
+          audio.removeAttribute("src");
+          audio.load();
+          audio.src = "/stream/" + encodeURIComponent(audio._djId) + "?r=" + Date.now();
+          audio.play().catch(() => {});
+          audio._reconnecting = false;
+          startWatchdog(audio);
+        }, delay);
+      }
+
+      function isWarmingUp(audio) {
+        // A fresh session may legitimately produce no audio for a while (slow network,
+        // browser buffering). Do not treat that as a stall.
+        return audio.currentTime === 0 && Date.now() - (audio._startedAt || 0) < 20000;
+      }
+
+      function startWatchdog(audio) {
+        clearWatchdog(audio);
+        audio._lastTime = audio.currentTime;
+        if (!audio._lastProgressAt) audio._lastProgressAt = Date.now();
+        audio._watchdogTimer = setInterval(() => {
+          if (activeAudio !== audio || !audio._isPlaying || audio._userStopped) {
+            clearWatchdog(audio);
+            return;
+          }
+          if (audio.currentTime !== audio._lastTime) {
+            audio._lastTime = audio.currentTime;
+            audio._lastProgressAt = Date.now();
+            return;
+          }
+          const silentFor = Date.now() - audio._lastProgressAt;
+          const warmingUp = isWarmingUp(audio);
+          if (!warmingUp && silentFor >= 6000) {
+            scheduleReconnect(audio, "stalled");
+          }
+        }, 2000);
+      }
+
+      function stopCard(audio) {
+        if (!audio) return;
+        clearWatchdog(audio);
+        clearReconnect(audio);
+        audio._userStopped = true;   // set before pause() so the pause handler does not re-enter
+        try { audio.pause(); } catch (e) {}
+        audio.removeAttribute("src");
+        audio.load();
+        audio._isPlaying = false;
+        audio._userStopped = true;
+        audio._attempts = 0;
+        if (activeAudio === audio) activeAudio = null;
+        updatePlayerUI(audio.closest(".dj-card"), "stopped");
+      }
+
+      function startCard(audio, djId) {
+        if (activeAudio && activeAudio !== audio) stopCard(activeAudio);
+        if (activeAudio === audio && audio._isPlaying && !audio.paused) return null;
+        if (activeAudio === audio) {
+          clearWatchdog(audio);
+          clearReconnect(audio);
+        }
+        activeAudio = audio;
+        audio._djId = djId;
+        audio._isPlaying = true;
+        audio._userStopped = false;
+        audio._attempts = 0;
+        audio._lastTime = audio.currentTime;
+        audio._lastProgressAt = Date.now();   // fresh clock for a fresh session
+        audio._startedAt = Date.now();
+        const baseSrc = "/stream/" + encodeURIComponent(djId);
+        if (!audio.src || audio.src.indexOf(baseSrc) === -1) audio.src = baseSrc;
+        const p = audio.paused ? audio.play() : null;
+        if (p && p.catch) p.catch(() => {});
+        updatePlayerUI(audio.closest(".dj-card"), "playing");
+        startWatchdog(audio);
+        return p;
+      }
 
       function setStatus(text, live) {
         statusEl.innerHTML = live !== false
@@ -431,17 +574,43 @@
         audio.src = "/stream/" + encodeURIComponent(dj.id);
         info.appendChild(audio);
 
+        const statusText = document.createElement("div");
+        statusText.className = "status-text";
+        statusText.textContent = "Stopped";
+        info.appendChild(statusText);
+
+        audio.addEventListener("play", function () {
+          if (activeAudio !== audio || !audio._isPlaying) startCard(audio, dj.id);
+        });
+        audio.addEventListener("pause", function () {
+          if (audio._reconnecting) return;
+          if (activeAudio === audio && audio._isPlaying && !audio._userStopped) stopCard(audio);
+        });
+        audio.addEventListener("playing", function () {
+          if (activeAudio !== audio || !audio._isPlaying || audio._userStopped) return;
+          audio._attempts = 0;
+          updatePlayerUI(audio.closest(".dj-card"), "playing");
+        });
+        audio.addEventListener("stalled", function () {
+          // Buffering events also fire on a normal start: require a real stall first.
+          if (!isWarmingUp(audio) && audio._lastProgressAt && Date.now() - audio._lastProgressAt >= 6000) {
+            scheduleReconnect(audio, "stalled");
+          }
+        });
+        audio.addEventListener("waiting", function () {
+          if (!isWarmingUp(audio) && audio._lastProgressAt && Date.now() - audio._lastProgressAt >= 6000) {
+            scheduleReconnect(audio, "waiting");
+          }
+        });
+        audio.addEventListener("error", function () { scheduleReconnect(audio, "error"); });
+        audio.addEventListener("ended", function () { scheduleReconnect(audio, "ended"); });
+
         const ext = document.createElement("a");
         ext.className = "open-external";
         ext.textContent = "Open in local app (we recommend VLC)";
-        // We serve the m3u (with audio/x-mpegurl content-type) so the OS opens it in
-        // the user's local player (e.g. VLC) instead of a download prompt. The m3u
-        // itself points at the DIRECT HQ stream on the Icecast host, so playback does
-        // NOT ride this proxy (saves bandwidth).
         ext.href = "/stream/" + encodeURIComponent(dj.id) + ".m3u";
         ext.target = "_blank";
 
-        // Link to the DJ's Twitch channel (dj.id is the Twitch username).
         const twitch = document.createElement("a");
         twitch.className = "open-external watch-twitch";
         twitch.textContent = "Watch on Twitch";
@@ -449,8 +618,6 @@
         twitch.target = "_blank";
         twitch.rel = "noopener noreferrer";
 
-        // Both links sit side by side to keep the card compact.
-        // Chat opens a popup on desktop so the stream keeps playing while typing.
         const chat = document.createElement("a");
         chat.className = "open-external watch-twitch";
         chat.textContent = "Chat";
@@ -460,11 +627,21 @@
         chat.title = "Open Twitch chat for " + dj.id;
         chat.addEventListener("click", function (e) { openTwitchChat(dj.id, e); });
 
+        const playBtn = document.createElement("button");
+        playBtn.type = "button";
+        playBtn.className = "open-external player-btn";
+        playBtn.textContent = "Play";
+        playBtn.addEventListener("click", function () {
+          if (activeAudio === audio && audio._isPlaying && !audio._userStopped) stopCard(audio);
+          else startCard(audio, dj.id);
+        });
+
         const actions = document.createElement("div");
         actions.className = "card-actions";
         actions.appendChild(ext);
         actions.appendChild(twitch);
         actions.appendChild(chat);
+        actions.appendChild(playBtn);
         info.appendChild(actions);
 
         card.appendChild(img);
@@ -663,7 +840,11 @@
 
         // Remove cards for DJs that are no longer live.
         existing.forEach((card, id) => {
-          if (!liveIds.includes(id)) card.remove();
+          if (!liveIds.includes(id)) {
+            const audio = card.querySelector("audio");
+            if (audio && activeAudio === audio) stopCard(audio);
+            card.remove();
+          }
         });
 
         for (const dj of djs) {
@@ -688,8 +869,7 @@
         if (!audio) return;
         playHandled = true;
         card.scrollIntoView({ block: "center", behavior: "smooth" });
-        card.classList.add("is-playing-target");
-        const p = audio.play();
+        const p = startCard(audio, card.dataset.djId);
         if (p && p.catch) {
           p.catch(function () {
             setStatus("Press play to start " + escapeHtml(PLAY_DJ), false);
@@ -917,6 +1097,8 @@
       });
 
       window.addEventListener("beforeunload", closeModal);
+      window.addEventListener("beforeunload", () => { stopCard(activeAudio); });
+      window.addEventListener("pagehide", () => { stopCard(activeAudio); });
 
       load();
       setInterval(load, REFRESH_MS);
