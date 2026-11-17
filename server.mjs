@@ -442,6 +442,14 @@ app.get("/stream/:dj", async (req, res) => {
     if (!upstream.ok) return res.status(502).send("upstream " + upstream.status);
 
     res.status(200);
+    // FIREFOX COMPATIBILITY - DO NOT "IMPROVE" THESE HEADERS.
+    // Verified working in Firefox, Edge and Chrome. Adding any of the following broke
+    // playback in at least one of them:
+    //   - ICY framing (icy-metaint + metadata blocks): jitter in Chromium, and the upstream
+    //     advertises icy-metaint but sends no metadata, so synthesised framing is fragile.
+    //   - Accept-Ranges: none / Cache-Control: no-store / Pragma / Expires: media elements
+    //     stopped decoding entirely (readyState 0).
+    // Keep it plain: audio/mpeg + no-cache + X-Accel-Buffering: no.
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("X-Accel-Buffering", "no");
