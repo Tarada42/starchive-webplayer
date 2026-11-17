@@ -461,6 +461,9 @@
         audio._isPlaying = false;
         audio._userStopped = true;
         audio._attempts = 0;
+        audio._sessionStart = 0;   // Stop resets the session clock
+        const clock = audio.closest(".dj-card") && audio.closest(".dj-card").querySelector(".pb-time");
+        if (clock) clock.textContent = "0:00";
         if (activeAudio === audio) activeAudio = null;
         updatePlayerUI(audio.closest(".dj-card"), "stopped");
       }
@@ -477,6 +480,7 @@
         audio._isPlaying = true;
         audio._userStopped = false;
         audio._attempts = 0;
+        if (!audio._sessionStart) audio._sessionStart = Date.now();   // first press of Play
         audio._lastTime = audio.currentTime;
         audio._lastProgressAt = Date.now();   // fresh clock for a fresh session
         audio._startedAt = Date.now();
@@ -664,7 +668,9 @@
           updatePlayerUI(audio.closest(".dj-card"), "playing");
         });
         audio.addEventListener("timeupdate", function () {
-          const t = Math.max(0, Math.floor(audio.currentTime || 0));
+          if (!audio._sessionStart) return;
+          // Session time, not the element's position: a reconnect must not reset it.
+          const t = Math.max(0, Math.floor((Date.now() - audio._sessionStart) / 1000));
           const h = Math.floor(t / 3600);
           const m = Math.floor((t % 3600) / 60);
           const sec = t % 60;

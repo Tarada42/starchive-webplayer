@@ -435,7 +435,13 @@ app.get("/stream/:dj", async (req, res) => {
     ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 30_000); // drop a dead upstream
     upstream = await fetch(up, {
-      headers: { "User-Agent": "STArchive-Web/1.0", "Accept": "audio/mpeg" },
+      headers: {
+        "User-Agent": "STArchive-Web/1.0",
+        "Accept": "audio/mpeg",
+        // Ask for ICY metadata: the response then carries icy-metaint and the client
+        // handles this as a live radio stream instead of a file it can finish buffering.
+        "Icy-MetaData": "1",
+      },
       signal: ctrl.signal,
     });
     clearTimeout(timeout);
@@ -453,7 +459,7 @@ app.get("/stream/:dj", async (req, res) => {
     res.setHeader("X-Accel-Buffering", "no");
     // Forward the station identity like Icecast does; harmless for Chromium, and some
     // players key their "this is a live radio stream" behaviour off these headers.
-    for (const h of ["icy-name", "icy-description", "icy-genre"]) {
+    for (const h of ["icy-name", "icy-description", "icy-genre", "icy-pub", "icy-metaint"]) {
       const v = upstream.headers.get(h);
       if (v) res.setHeader(h, v);
     }
