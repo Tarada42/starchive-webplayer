@@ -434,18 +434,10 @@ app.get("/stream/:dj", async (req, res) => {
   try {
     ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 30_000); // drop a dead upstream
-    // Firefox stops reading a plain endless MP3 every ~90 s (media read-ahead limit) and
-    // re-opens the channel, which is audible as a small break. Presenting the stream as
-    // ICY ("live radio") with interleaved metadata avoids that behaviour. Chromium plays
-    // the plain stream fine, so the ICY path is limited to Firefox.
-    const ua = String(req.headers["user-agent"] || "");
-    const isFirefox = /firefox\//i.test(ua);
-
     upstream = await fetch(up, {
       headers: {
         "User-Agent": "STArchive-Web/1.0",
         "Accept": "audio/mpeg",
-        ...(isFirefox ? { "Icy-MetaData": "1" } : {}),
       },
       signal: ctrl.signal,
     });
@@ -456,14 +448,6 @@ app.get("/stream/:dj", async (req, res) => {
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("X-Accel-Buffering", "no");
-    if (isFirefox) {
-      // These MUST match the body: with Icy-MetaData requested the upstream interleaves
-      // metadata blocks every icy-metaint bytes, so the client needs the header to parse it.
-      for (const h of ["icy-metaint", "icy-name", "icy-description", "icy-genre"]) {
-        const v = upstream.headers.get(h);
-        if (v) res.setHeader(h, v);
-      }
-    }
     res.flushHeaders();
 
     // Explicitly pump the upstream body through; proving-viable reader pattern.
