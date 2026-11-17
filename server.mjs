@@ -454,12 +454,9 @@ app.get("/stream/:dj", async (req, res) => {
     res.setHeader("Expires", "0");
     res.setHeader("Accept-Ranges", "none");
     res.setHeader("X-Accel-Buffering", "no");
-    // Forward the station identity like Icecast does; harmless for Chromium, and some
-    // players key their "this is a live radio stream" behaviour off these headers.
-    for (const h of ["icy-name", "icy-description", "icy-genre"]) {
-      const v = upstream.headers.get(h);
-      if (v) res.setHeader(h, v);
-    }
+    // NOTE: do not forward icy-* headers. Their presence makes browsers treat the
+    // response as a Shoutcast stream that must carry icy-metaint framing; without it
+    // the media element refuses to decode (readyState stays 0).
     res.flushHeaders();
 
     // Explicitly pump the upstream body through; proving-viable reader pattern.
