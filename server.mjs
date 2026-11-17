@@ -443,8 +443,20 @@ app.get("/stream/:dj", async (req, res) => {
 
     res.status(200);
     res.setHeader("Content-Type", "audio/mpeg");
-    res.setHeader("Cache-Control", "no-cache");
+    // Mirror Icecast's caching policy. With only "no-cache" Firefox cached the media
+    // response, then aborted the channel (NS_BINDING_ABORTED) when it could not extend
+    // that cache entry. "no-store" keeps a live stream out of the media cache entirely.
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Accept-Ranges", "none");
     res.setHeader("X-Accel-Buffering", "no");
+    // Forward the station identity like Icecast does; harmless for Chromium, and some
+    // players key their "this is a live radio stream" behaviour off these headers.
+    for (const h of ["icy-name", "icy-description", "icy-genre"]) {
+      const v = upstream.headers.get(h);
+      if (v) res.setHeader(h, v);
+    }
     res.flushHeaders();
 
     // Explicitly pump the upstream body through; proving-viable reader pattern.
