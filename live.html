@@ -444,7 +444,10 @@
           }
           const silentFor = Date.now() - audio._lastProgressAt;
           const warmingUp = isWarmingUp(audio);
-          if (!warmingUp && silentFor >= 6000) {
+          // Only treat silence as a stall when the element has run out of data to play
+          // (readyState < HAVE_FUTURE_DATA). A paused-but-buffered stream is not a stall.
+          const starving = audio.readyState < 3;
+          if (!warmingUp && starving && silentFor >= 8000) {
             scheduleReconnect(audio, "stalled");
           }
         }, 2000);
@@ -667,9 +670,10 @@
           audio._attempts = 0;
           updatePlayerUI(audio.closest(".dj-card"), "playing");
         });
-        audio.addEventListener("timeupdate", function () {
+        // Session clock: counts from the first Play, independent of the element's own
+        // position, so a stall or reconnect never resets or freezes it.
+        setInterval(function () {
           if (!audio._sessionStart) return;
-          // Session time, not the element's position: a reconnect must not reset it.
           const t = Math.max(0, Math.floor((Date.now() - audio._sessionStart) / 1000));
           const h = Math.floor(t / 3600);
           const m = Math.floor((t % 3600) / 60);
@@ -677,7 +681,7 @@
           timeEl.textContent = h > 0
             ? h + ":" + String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0")
             : m + ":" + String(sec).padStart(2, "0");
-        });
+        }, 1000);
 
         playPauseBtn.addEventListener("click", function () {
           if (activeAudio === audio && audio._isPlaying && !audio.paused) {

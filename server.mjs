@@ -446,17 +446,8 @@ app.get("/stream/:dj", async (req, res) => {
 
     res.status(200);
     res.setHeader("Content-Type", "audio/mpeg");
-    // Mirror Icecast's caching policy. With only "no-cache" Firefox cached the media
-    // response, then aborted the channel (NS_BINDING_ABORTED) when it could not extend
-    // that cache entry. "no-store" keeps a live stream out of the media cache entirely.
-    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    res.setHeader("Pragma", "no-cache");
-    res.setHeader("Expires", "0");
-    res.setHeader("Accept-Ranges", "none");
+    res.setHeader("Cache-Control", "no-cache");
     res.setHeader("X-Accel-Buffering", "no");
-    // NOTE: do not forward icy-* headers. Their presence makes browsers treat the
-    // response as a Shoutcast stream that must carry icy-metaint framing; without it
-    // the media element refuses to decode (readyState stays 0).
     res.flushHeaders();
 
     // Explicitly pump the upstream body through; proving-viable reader pattern.
