@@ -434,6 +434,8 @@ app.get("/stream/:dj", async (req, res) => {
   try {
     ctrl = new AbortController();
     const timeout = setTimeout(() => ctrl.abort(), 30_000); // drop a dead upstream
+    const uaEarly = String(req.headers["user-agent"] || "");
+    const isFirefox = /firefox\//i.test(uaEarly);
     upstream = await fetch(up, {
       headers: {
         "User-Agent": "STArchive-Web/1.0",
@@ -448,15 +450,49 @@ app.get("/stream/:dj", async (req, res) => {
     res.setHeader("Content-Type", "audio/mpeg");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("X-Accel-Buffering", "no");
+    if (isFirefox) {
+      res.setHeader("icy-metaint", String(16000));
+      res.setHeader("icy-name", "STArchive live");
+    }
     res.flushHeaders();
 
-    // Explicitly pump the upstream body through; proving-viable reader pattern.
+    // Firefox caps its media read-ahead on plain endless MP3 (it stops reading around
+    // 60 s, then re-opens the channel ~30 s later: an audible break every ~90 s). It does
+    // NOT do that for ICY ("live radio") streams. Icecast advertises icy-metaint but in
+    // this setup sends no metadata blocks, so we build the framing ourselves: every
+    // ICY_METAINT audio bytes we insert one correctly-formed metadata block.
+    const ICY_METAINT = 16000;
+    const icyMeta = (() => {
+      const text = Buffer.from("StreamTitle='STArchive live';", "utf8");
+      const blocks = Math.ceil(text.length / 16);
+      const padded = Buffer.alloc(blocks * 16, 0);
+      text.copy(padded);
+      return Buffer.concat([Buffer.from([blocks]), padded]);
+    })();
+    let sinceMeta = 0;
+
     const reader = upstream.body.getReader();
     try {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        res.write(Buffer.from(value));
+        let buf = Buffer.from(value);
+        if (!isFirefox) {
+          res.write(buf);
+          continue;
+        }
+        // Interleave metadata at exact ICY_METAINT boundaries.
+        while (buf.length > 0) {
+          const room = ICY_METAINT - sinceMeta;
+          const take = Math.min(room, buf.length);
+          res.write(buf.subarray(0, take));
+          sinceMeta += take;
+          buf = buf.subarray(take);
+          if (sinceMeta === ICY_METAINT) {
+            res.write(icyMeta);
+            sinceMeta = 0;
+          }
+        }
       }
     } finally {
       try { reader.releaseLock(); } catch {}
