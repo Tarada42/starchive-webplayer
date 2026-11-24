@@ -359,11 +359,14 @@ export function createAdminApp({ dataDir }) {
     const dj = normalizeDjId(req.body?.dj);
     if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
     const socials = sanitizeSocials(req.body?.socials);
+    // partial=true writes only the keys supplied (used by per-link approval); the
+    // normal save replaces every editable key the editor manages.
+    const partial = req.body?.partial === true;
 
     try {
       const saved = await withSocialsLock(() => {
         const all = readSocialsFile(socialsFile);
-        const merged = mergeEditedSocials(all[dj], socials);
+        const merged = partial ? { ...(all[dj] || {}), ...socials } : mergeEditedSocials(all[dj], socials);
         if (Object.keys(merged).length === 0) {
           delete all[dj];
         } else {

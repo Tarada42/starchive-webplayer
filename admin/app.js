@@ -288,17 +288,55 @@ async function rejectSuggestionKey(key) {
   }
 }
 
-/** Accept one suggested link without saving the whole form yet. */
-function acceptSuggestionKey(key) {
+/**
+ * Accept one suggested link: this writes that link on its own, right now. The other
+ * suggestions stay pending, and the normal Save button is not involved.
+ */
+async function acceptSuggestionKey(key) {
+  if (!editingDj) return;
   const input = els.djForm.querySelector(`[data-social="${key}"]`);
-  const label = input?.closest(".field");
-  label?.querySelector(".field-actions")?.remove();
-  const tag = label?.querySelector(".field-tag");
-  if (tag) {
-    tag.dataset.state = "accepted";
-    tag.textContent = "accepted";
+  const value = (input?.value || "").trim();
+  if (!/^https?:\/\//i.test(value)) {
+    setNote("That field is empty — nothing to approve.", "error");
+    return;
   }
-  setNote("Accepted — remember to save.", "ok");
+
+  const djId = editingDj.id;
+  setNote(`Saving the ${key} link…`, null);
+  try {
+    const res = await api(`${API_PREFIX}/content/socials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: djId, socials: { [key]: value }, partial: true }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setNote(data.error || "Could not save that link", "error");
+      return;
+    }
+
+    const label = input?.closest(".field");
+    label?.querySelector(".field-actions")?.remove();
+    const tag = label?.querySelector(".field-tag");
+    if (tag) {
+      tag.dataset.state = "saved";
+      tag.textContent = "saved";
+    }
+
+    // The suggestion for this key is now stored, so it is no longer pending.
+    if (editingDj.suggestion && editingDj.suggestion.socials) {
+      delete editingDj.suggestion.socials[key];
+      if (!Object.keys(editingDj.suggestion.socials).length) editingDj.suggestion = null;
+    }
+    editingDj.socials = { ...(editingDj.socials || {}), [key]: value };
+    if (typeof contentStatusText === "function") els.contentStatus.textContent = contentStatusText();
+    renderSuggestions(editingDj.suggestion);
+    renderDjList();
+    setNote(`Saved the ${key} link.`, "ok");
+  } catch (e) {
+    setNote("Network error", "error");
+    console.error("Failed to approve one link:", e);
+  }
 }
 
 function renderFieldLinks() {
