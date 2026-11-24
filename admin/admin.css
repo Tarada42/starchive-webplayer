@@ -650,7 +650,6 @@ body {
   grid-template-columns: 1fr;
   gap: 12px;
   margin-bottom: 16px;
-  max-width: 560px;
 }
 
 .field {
@@ -728,4 +727,15 @@ body {
 
 .field-open:hover {
   text-decoration: underline;
+}
+
+/* Long URLs must be fully readable, never clipped. */
+.field-input {
+  font-variant-ligatures: none;
+  text-overflow: clip;
+}
+
+.dj-badge-suggested {
+  background: rgba(250, 204, 21, 0.16);
+  color: #fde68a;
 }

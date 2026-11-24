@@ -135,7 +135,13 @@ assert(sanitizeSocials({ twitter: "https://twitter.com/legacy" }).twitter === "h
 
 console.log("\nsuggestionFor");
 const sugg = { thedjbigd: { socials: { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd", bogus: "nope" }, notes: "n", sources: ["https://x.com/TheDJBigD"] } };
-assertEqual(suggestionFor("thedjbigd", {}, sugg, {}).socials, { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, "returns sanitised suggested links");
+const four = { thedjbigd: { socials: {
+  x: "https://x.com/TheDJBigD",
+  youtube: "https://www.youtube.com/@thedjbigd",
+  soundcloud: "https://soundcloud.com/thedjbigd",
+  mixcloud: "https://www.mixcloud.com/thedjbigd/",
+} } };
+assertEqual(Object.keys(suggestionFor("thedjbigd", {}, four, {}).socials).sort(), ["mixcloud", "soundcloud", "x", "youtube"], "keeps soundcloud and mixcloud as storable keys");
 assertEqual(suggestionFor("thedjbigd", { website: "https://x.test" }, sugg, {}), null, "hides the suggestion once links are stored");
 assertEqual(suggestionFor("thedjbigd", {}, sugg, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }), null, "a declined suggestion stays hidden");
 assert(suggestionFor("thedjbigd", {}, { thedjbigd: { ...sugg.thedjbigd, foundAt: "2026-11-30" } }, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }) !== null, "a newer suggestion resurfaces after a decline");

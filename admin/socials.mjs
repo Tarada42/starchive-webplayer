@@ -14,6 +14,8 @@ export const ALLOWED_SOCIAL_KEYS = [
   "youtube",
   "discord",
   "tiktok",
+  "soundcloud",
+  "mixcloud",
 ];
 
 /**
@@ -21,7 +23,7 @@ export const ALLOWED_SOCIAL_KEYS = [
  * https://www.twitch.tv/<dj> from the DJ id itself, so a stored value could only
  * override a link that is already correct. "twitter" is a legacy alias of "x".
  */
-export const EDITABLE_SOCIAL_KEYS = ["website", "x", "instagram", "youtube", "discord", "tiktok"];
+export const EDITABLE_SOCIAL_KEYS = ["website", "x", "instagram", "youtube", "soundcloud", "mixcloud", "discord", "tiktok"];
 
 const MAX_VALUE_LENGTH = 300;
 const MAX_KEY_LENGTH = 64;

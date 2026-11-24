@@ -27,6 +27,8 @@ export const ALLOWED_SOCIAL_KEYS = new Set([
   "youtube",
   "discord",
   "tiktok",
+  "soundcloud",
+  "mixcloud",
   "website",
 ]);
 

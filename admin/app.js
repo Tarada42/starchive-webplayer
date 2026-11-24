@@ -162,9 +162,11 @@ function renderDjList() {
   els.djList.innerHTML = rows
     .map((r) => {
       const count = Object.keys(r.socials || {}).length;
-      const badge = count
-        ? `<span class="dj-badge">${count} link${count === 1 ? "" : "s"}</span>`
-        : '<span class="dj-id">no links</span>';
+      const badge = r.suggestion
+        ? '<span class="dj-badge dj-badge-suggested">suggested</span>'
+        : count
+          ? `<span class="dj-badge">${count} link${count === 1 ? "" : "s"}</span>`
+          : '<span class="dj-id">no links</span>';
       return `<li>
         <button class="btn btn-secondary dj-open" type="button" data-dj="${escapeHtml(r.id)}">
           <span class="dj-name">${escapeHtml(r.name)}</span>

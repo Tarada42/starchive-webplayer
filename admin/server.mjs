@@ -213,11 +213,14 @@ export function createAdminApp({ dataDir }) {
   });
 
   // Static assets for the admin SPA.
+  // Admin assets change with every deploy and are only reachable behind the tunnel,
+  // so never let a browser serve a stale copy of the SPA.
+  const noStore = { "Cache-Control": "no-store, must-revalidate" };
   app.get("/assets/admin.css", (_req, res) =>
-    res.sendFile(path.join(__dirname, "admin.css"))
+    res.sendFile(path.join(__dirname, "admin.css"), { headers: noStore })
   );
   app.get("/assets/admin.js", (_req, res) =>
-    res.sendFile(path.join(__dirname, "app.js"))
+    res.sendFile(path.join(__dirname, "app.js"), { headers: noStore })
   );
 
   // Login page (GET) — served by the SPA shell.
