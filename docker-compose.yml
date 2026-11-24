@@ -5,7 +5,7 @@
 # This file defines only the webapp container that actually serves the site.
 #
 # Values come from /docker/starchive-webapp/.env (never commit secrets):
-#   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, COLIFLOWER_USERS, ADMIN_USER,
+#   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, ADMIN_USER,
 #   ADMIN_PASSWORD, SESSION_SECRET
 
 services:
@@ -23,7 +23,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SESSION_SECRET=${SESSION_SECRET}
     volumes:
-      # Persistent, admin-editable data (dj-socials.json written by the /coliflower editor).
+      # Persistent admin-editable data (dj-socials.json).
       - ./data:/app/data
     ports:
       # Admin site is published to host loopback only; Cloudflare Tunnel forwards to it.
@@ -37,14 +37,3 @@ services:
       - "traefik.http.routers.webapp.tls=true"
       - "traefik.http.routers.webapp.tls.certresolver=letsencrypt"
       - "traefik.http.services.webapp.loadbalancer.server.port=8080"
-
-      # /coliflower admin editor - basic auth + rate limit
-      - "traefik.http.middlewares.coliflower-auth.basicauth.users=${COLIFLOWER_USERS}"
-      - "traefik.http.middlewares.coliflower-ratelimit.ratelimit.average=5"
-      - "traefik.http.middlewares.coliflower-ratelimit.ratelimit.burst=10"
-      - "traefik.http.routers.coliflower.rule=Host(`webapp.streambox.space`) && PathPrefix(`/coliflower`)"
-      - "traefik.http.routers.coliflower.entrypoints=websecure"
-      - "traefik.http.routers.coliflower.tls=true"
-      - "traefik.http.routers.coliflower.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.coliflower.middlewares=coliflower-auth,coliflower-ratelimit"
-      - "traefik.http.routers.coliflower.service=webapp"
