@@ -675,3 +675,14 @@ body {
 .form-note.ok {
   color: #86efac;
 }
+
+.field-hint {
+  font-style: normal;
+  opacity: 0.55;
+  font-size: 0.9em;
+}
+
+.field-input[readonly] {
+  opacity: 0.7;
+  cursor: default;
+}

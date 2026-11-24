@@ -16,8 +16,12 @@ export const ALLOWED_SOCIAL_KEYS = [
   "tiktok",
 ];
 
-/** Keys the editor shows as inputs. "twitter" is a legacy alias of "x" and is preserved. */
-export const EDITABLE_SOCIAL_KEYS = ["twitch", "website", "x", "instagram", "youtube", "discord", "tiktok"];
+/**
+ * Keys the editor writes. "twitch" is intentionally absent: the public endpoint derives
+ * https://www.twitch.tv/<dj> from the DJ id itself, so a stored value could only
+ * override a link that is already correct. "twitter" is a legacy alias of "x".
+ */
+export const EDITABLE_SOCIAL_KEYS = ["website", "x", "instagram", "youtube", "discord", "tiktok"];
 
 const MAX_VALUE_LENGTH = 300;
 const MAX_KEY_LENGTH = 64;

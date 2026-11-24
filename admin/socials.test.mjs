@@ -5,6 +5,7 @@ import os from "os";
 import path from "path";
 import {
   ALLOWED_SOCIAL_KEYS,
+  EDITABLE_SOCIAL_KEYS,
   isValidDjId,
   mergeDjList,
   mergeEditedSocials,
@@ -112,12 +113,20 @@ assertEqual(
   "preserves legacy and unknown keys, replaces edited ones"
 );
 assertEqual(
-  mergeEditedSocials({ twitch: "https://www.twitch.tv/x", custom: "keep" }, {}),
+  mergeEditedSocials({ instagram: "https://instagram.com/x", custom: "keep" }, {}),
   { custom: "keep" },
   "clears keys the editor emptied but keeps unmanaged ones"
 );
 assertEqual(mergeEditedSocials(null, { website: "https://x.test" }), { website: "https://x.test" }, "handles a missing entry");
 assertEqual(mergeEditedSocials({ a: 1 }, {}), { a: 1 }, "never drops keys the editor does not manage");
+
+console.log("\ntwitch is derived, not editable");
+assert(!EDITABLE_SOCIAL_KEYS.includes("twitch"), "the editor never writes twitch (the API derives it)");
+assertEqual(
+  mergeEditedSocials({ twitch: "https://custom.example/tv" }, { website: "https://x.test" }),
+  { twitch: "https://custom.example/tv", website: "https://x.test" },
+  "an existing twitch override survives an edit"
+);
 
 console.log("\ntwitter/x alias");
 assert(sanitizeSocials({ twitter: "https://twitter.com/legacy" }).twitter === "https://twitter.com/legacy", "accepts the legacy twitter key");

@@ -34,6 +34,7 @@ const els = {
   djForm: document.getElementById("dj-form"),
   djDelete: document.getElementById("dj-delete"),
   djFormNote: document.getElementById("dj-form-note"),
+  djTwitch: document.getElementById("dj-twitch"),
 };
 
 async function api(url, options = {}) {
@@ -203,6 +204,7 @@ function openEditor(id) {
   if (!row) return;
   editingDj = row;
   els.djEditorTitle.textContent = `${row.name} · ${row.id}`;
+  if (els.djTwitch) els.djTwitch.value = `https://www.twitch.tv/${row.id}`;
   for (const input of els.djForm.querySelectorAll("[data-social]")) {
     input.value = (row.socials || {})[input.dataset.social] || "";
   }
