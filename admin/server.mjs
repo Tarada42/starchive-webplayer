@@ -24,6 +24,17 @@ import {
   withSocialsLock,
   writeSocialsFile,
 } from "./socials.mjs";
+import {
+  genreVocabulary,
+  genresBasePath,
+  isValidGenreName,
+  mergeGenres,
+  overridesPathFor,
+  sanitizeGenres,
+  withGenresLock,
+  writeOverrides,
+  readJsonSafe as readJsonSafeGenres,
+} from "./genres.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -298,6 +309,8 @@ export function createAdminApp({ dataDir }) {
   // /api/dj-profile endpoint reads. Every change is attributed in the log.
   const socialsFile = socialsPathFor(dataDir);
   const declinesFile = declinesPathFor(dataDir);
+  const genresBaseFile = genresBasePath(path.join(__dirname, ".."));
+  const overridesFile = overridesPathFor(dataDir);
   const suggestionsFile = suggestionsPathFor(path.join(__dirname, ".."));
 
   function auditActor(req) {
@@ -389,6 +402,95 @@ export function createAdminApp({ dataDir }) {
     } catch (e) {
       console.error("POST /api/admin/content/suggestions/decline failed:", e);
       return res.status(500).json({ error: "Failed to decline suggestion" });
+    }
+  });
+
+
+  // ---- Content: genres ----------------------------------------------------------
+  // Overrides live on the data volume; the public /genres.json endpoint merges them
+  // over the auto-detected tags at request time.
+  function currentGenresBase() {
+    return readJsonSafeGenres(genresBaseFile, { artists: {} });
+  }
+
+  app.get("/api/admin/content/genres", async (_req, res) => {
+    try {
+      const base = currentGenresBase();
+      const overrides = readJsonSafeGenres(overridesFile, {});
+      const merged = mergeGenres(base, overrides).artists || {};
+      const artistsRes = await callHandler(artistsHandler, { method: "GET", url: "/api/artists" });
+      const artists = Array.isArray(artistsRes.data) ? artistsRes.data : [];
+
+      const rows = artists
+        .map((a) => {
+          const id = normalizeDjId(a.id);
+          const entry = merged[id] || {};
+          return {
+            id,
+            name: a.displayName || a.name || id,
+            genres: Array.isArray(entry.genres) ? entry.genres : [],
+            source: entry.source || "none",
+            tags: Array.isArray(entry.tags) ? entry.tags.slice(0, 12) : [],
+          };
+        })
+        .filter((r) => isValidDjId(r.id))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      res.status(200).json({ djs: rows, vocabulary: genreVocabulary(base, overrides) });
+    } catch (e) {
+      console.error("GET /api/admin/content/genres failed:", e);
+      res.status(500).json({ error: "Failed to load genres" });
+    }
+  });
+
+  app.post("/api/admin/content/genres", auth.requireCsrf, async (req, res) => {
+    const dj = normalizeDjId(req.body?.dj);
+    if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
+
+    const raw = req.body?.genres;
+    if (!Array.isArray(raw)) return res.status(400).json({ error: "genres must be a list" });
+    if (raw.some((g) => !isValidGenreName(g))) {
+      return res.status(400).json({ error: "Invalid genre name" });
+    }
+    const genres = sanitizeGenres(raw);
+    if (!genres.length) {
+      return res.status(400).json({ error: "Keep at least one genre, or use Clear" });
+    }
+
+    try {
+      await withGenresLock(() => {
+        const stored = readJsonSafeGenres(overridesFile, { overrides: {} });
+        const overrides = stored.overrides && typeof stored.overrides === "object" ? stored.overrides : {};
+        overrides[dj] = { genres, updatedAt: new Date().toISOString(), by: auditActor(req) };
+        writeOverrides(overridesFile, overrides);
+      });
+      audit(req, "genres.save", `${dj} (${genres.join(", ")})`);
+      return res.status(200).json({ ok: true, dj, genres });
+    } catch (e) {
+      console.error("POST /api/admin/content/genres failed:", e);
+      return res.status(500).json({ error: "Failed to save genres" });
+    }
+  });
+
+  app.post("/api/admin/content/genres/clear", auth.requireCsrf, async (req, res) => {
+    const dj = normalizeDjId(req.body?.dj);
+    if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
+
+    try {
+      const existed = await withGenresLock(() => {
+        const stored = readJsonSafeGenres(overridesFile, { overrides: {} });
+        const overrides = stored.overrides && typeof stored.overrides === "object" ? stored.overrides : {};
+        if (!(dj in overrides)) return false;
+        delete overrides[dj];
+        writeOverrides(overridesFile, overrides);
+        return true;
+      });
+      if (!existed) return res.status(404).json({ error: "No manual genres for that DJ" });
+      audit(req, "genres.clear", dj);
+      return res.status(200).json({ ok: true, dj });
+    } catch (e) {
+      console.error("POST /api/admin/content/genres/clear failed:", e);
+      return res.status(500).json({ error: "Failed to clear genres" });
     }
   });
 

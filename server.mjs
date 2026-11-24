@@ -2,6 +2,7 @@
 // Serves static files + mounts the three api handlers as Express routes.
 // Was: Vercel serverless. Now: one Node process, no Vercel dependency.
 import express from "express";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -11,6 +12,7 @@ import thumbnails from "./api/artist-thumbnails.js";
 import live from "./api/live.js";
 import djProfile from "./api/dj-profile.js";
 import { createAdminApp } from "./admin/server.mjs";
+import { genresBasePath, mergeGenres, overridesPathFor, readOverrides } from "./admin/genres.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 8080;
@@ -25,6 +27,20 @@ app.use((req, _res, next) => {
   const t = new Date().toISOString();
   console.log(`[${t}] ${req.method} ${req.originalUrl}`);
   next();
+});
+
+// Genres: the generated Twitch-tag file with the admin's manual overrides applied.
+// Must be declared before express.static, which would otherwise serve the raw file.
+app.get("/genres.json", (_req, res) => {
+  try {
+    const base = JSON.parse(fs.readFileSync(genresBasePath(__dirname), "utf8"));
+    const overrides = readOverrides(overridesPathFor(DATA_DIR));
+    res.setHeader("Cache-Control", "no-cache");
+    res.status(200).json(mergeGenres(base, overrides));
+  } catch (e) {
+    console.error("GET /genres.json failed:", e);
+    res.status(500).json({ artists: {} });
+  }
 });
 
 // Static files

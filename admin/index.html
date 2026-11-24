@@ -21,6 +21,9 @@
         <a href="#/content" class="nav-link" data-route="content">
           <span class="nav-icon" aria-hidden="true">☰</span> Content
         </a>
+        <a href="#/genres" class="nav-link" data-route="genres">
+          <span class="nav-icon" aria-hidden="true">♫</span> Genres
+        </a>
         <a href="#/system" class="nav-link" data-route="system">
           <span class="nav-icon" aria-hidden="true">⚙</span> System
         </a>
@@ -163,6 +166,40 @@
             </div>
             <p class="form-note" id="dj-form-note" role="status"></p>
           </form>
+        </div>
+      </section>
+
+      <section class="page hidden" id="page-genres">
+        <div class="card" id="genre-list-card">
+          <div class="card-header">
+            <h2 class="card-title">Genres</h2>
+            <span class="collection-meta" id="genre-status"></span>
+          </div>
+          <div class="field-row">
+            <input id="genre-search" class="field-input" type="search" placeholder="Filter DJs…" autocomplete="off" aria-label="Filter DJs" />
+          </div>
+          <ul class="dj-list" id="genre-list">
+            <li class="empty">Loading…</li>
+          </ul>
+        </div>
+
+        <div class="card hidden" id="genre-editor">
+          <div class="card-header">
+            <h2 class="card-title" id="genre-editor-title">Edit genres</h2>
+            <button class="btn btn-secondary" id="genre-editor-back" type="button">Back to list</button>
+          </div>
+          <p class="collection-meta" id="genre-editor-source"></p>
+          <div class="chip-row" id="genre-chips"></div>
+          <div class="genre-add-row">
+            <input class="field-input" id="genre-input" list="genre-suggestions" placeholder="Add a genre…" autocomplete="off" />
+            <datalist id="genre-suggestions"></datalist>
+            <button class="btn btn-secondary" id="genre-add" type="button">Add</button>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" id="genre-save" type="button">Save genres</button>
+            <button class="btn btn-secondary" id="genre-clear" type="button">Clear manual override</button>
+          </div>
+          <p class="form-note" id="genre-note" role="status"></p>
         </div>
       </section>
 

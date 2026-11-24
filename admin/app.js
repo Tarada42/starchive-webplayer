@@ -34,6 +34,21 @@ const els = {
   djForm: document.getElementById("dj-form"),
   djDelete: document.getElementById("dj-delete"),
   djFormNote: document.getElementById("dj-form-note"),
+  genreStatus: document.getElementById("genre-status"),
+  genreListCard: document.getElementById("genre-list-card"),
+  genreSearch: document.getElementById("genre-search"),
+  genreList: document.getElementById("genre-list"),
+  genreEditor: document.getElementById("genre-editor"),
+  genreEditorTitle: document.getElementById("genre-editor-title"),
+  genreEditorSource: document.getElementById("genre-editor-source"),
+  genreEditorBack: document.getElementById("genre-editor-back"),
+  genreChips: document.getElementById("genre-chips"),
+  genreInput: document.getElementById("genre-input"),
+  genreSuggestions: document.getElementById("genre-suggestions"),
+  genreAdd: document.getElementById("genre-add"),
+  genreSave: document.getElementById("genre-save"),
+  genreClear: document.getElementById("genre-clear"),
+  genreNote: document.getElementById("genre-note"),
   djTwitch: document.getElementById("dj-twitch"),
   djTwitchLink: document.getElementById("dj-twitch-link"),
   djSuggestion: document.getElementById("dj-suggestion"),
@@ -411,6 +426,229 @@ if (els.djList && els.djSearch && els.djForm) {
   els.djDecline?.addEventListener("click", declineSuggestion);
 }
 
+
+// ---- Genres -----------------------------------------------------------------
+let genreRows = [];
+let genreVocab = [];
+let editingGenreDj = null;
+let draftGenres = [];
+
+function genreNote(text, kind) {
+  if (!els.genreNote) return;
+  els.genreNote.textContent = text || "";
+  els.genreNote.classList.toggle("ok", kind === "ok");
+  els.genreNote.classList.toggle("error", kind === "error");
+}
+
+function renderGenreList() {
+  if (!els.genreList) return;
+  const q = (els.genreSearch.value || "").trim().toLowerCase();
+  const rows = genreRows.filter(
+    (r) => !q || r.name.toLowerCase().includes(q) || r.id.includes(q)
+  );
+  if (!rows.length) {
+    els.genreList.innerHTML = '<li class="empty">No DJs match that filter.</li>';
+    return;
+  }
+  els.genreList.innerHTML = rows
+    .map((r) => {
+      const chips = (r.genres || [])
+        .map((g) => `<span class="genre-chip">${escapeHtml(g)}</span>`)
+        .join("");
+      const badge =
+        r.source === "manual"
+          ? '<span class="dj-badge dj-badge-suggested">manual</span>'
+          : r.genres && r.genres.length
+            ? '<span class="dj-id">auto</span>'
+            : '<span class="dj-id">untagged</span>';
+      return `<li>
+        <button class="btn btn-secondary dj-open genre-open" type="button" data-dj="${escapeHtml(r.id)}">
+          <span class="dj-name">${escapeHtml(r.name)}</span>
+          <span class="dj-id">${escapeHtml(r.id)}</span>
+        </button>
+        <span class="genre-chips-inline">${chips}</span>
+        ${badge}
+      </li>`;
+    })
+    .join("");
+}
+
+async function loadGenres(force = false) {
+  if (!els.genreList) return;
+  if (genreRows.length && !force) {
+    renderGenreList();
+    return;
+  }
+  els.genreStatus.textContent = "Loading…";
+  try {
+    const res = await api(`${API_PREFIX}/content/genres`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    genreRows = Array.isArray(data.djs) ? data.djs : [];
+    genreVocab = Array.isArray(data.vocabulary) ? data.vocabulary : [];
+    const manual = genreRows.filter((r) => r.source === "manual").length;
+    const untagged = genreRows.filter((r) => !r.genres || !r.genres.length).length;
+    els.genreStatus.textContent = `${genreRows.length} DJs · ${manual} manual · ${untagged} untagged`;
+    if (els.genreSuggestions) {
+      els.genreSuggestions.innerHTML = genreVocab
+        .map((g) => `<option value="${escapeHtml(g.name)}"></option>`)
+        .join("");
+    }
+    renderGenreList();
+  } catch (e) {
+    els.genreStatus.textContent = "Could not load genres";
+    els.genreList.innerHTML = '<li class="empty">Failed to load. Try again.</li>';
+    console.error("Failed to load genres:", e);
+  }
+}
+
+function renderGenreChips() {
+  if (!els.genreChips) return;
+  if (!draftGenres.length) {
+    els.genreChips.innerHTML = '<span class="dj-id">No genres yet — add at least one.</span>';
+    return;
+  }
+  els.genreChips.innerHTML = draftGenres
+    .map(
+      (g, i) =>
+        `<button type="button" class="genre-chip genre-chip-edit" data-index="${i}" title="Remove ${escapeHtml(g)}">${escapeHtml(g)} <span aria-hidden="true">×</span></button>`
+    )
+    .join("");
+}
+
+function openGenreEditor(id) {
+  const row = genreRows.find((r) => r.id === id);
+  if (!row) return;
+  editingGenreDj = row;
+  draftGenres = [...(row.genres || [])];
+  els.genreEditorTitle.textContent = `${row.name} · ${row.id}`;
+  els.genreEditorSource.textContent =
+    row.source === "manual"
+      ? "Manual override — these win over the Twitch tags."
+      : row.tags && row.tags.length
+        ? `Detected from Twitch tags: ${row.tags.join(", ")}`
+        : "No usable Twitch tags for this DJ.";
+  els.genreListCard.classList.add("hidden");
+  els.genreEditor.classList.remove("hidden");
+  renderGenreChips();
+  genreNote("", null);
+}
+
+function closeGenreEditor() {
+  editingGenreDj = null;
+  draftGenres = [];
+  els.genreEditor.classList.add("hidden");
+  els.genreListCard.classList.remove("hidden");
+  genreNote("", null);
+}
+
+function addGenreFromInput() {
+  const value = (els.genreInput.value || "").trim();
+  if (!value) return;
+  if (draftGenres.some((g) => g.toLowerCase() === value.toLowerCase())) {
+    genreNote("Already in the list.", "error");
+    els.genreInput.value = "";
+    return;
+  }
+  if (draftGenres.length >= 6) {
+    genreNote("Six genres is the maximum.", "error");
+    return;
+  }
+  draftGenres.push(value);
+  els.genreInput.value = "";
+  genreNote("", null);
+  renderGenreChips();
+}
+
+async function saveGenres() {
+  if (!editingGenreDj) return;
+  if (!draftGenres.length) {
+    genreNote("Add at least one genre, or use Clear.", "error");
+    return;
+  }
+  genreNote("Saving…", null);
+  try {
+    const res = await api(`${API_PREFIX}/content/genres`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: editingGenreDj.id, genres: draftGenres }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      genreNote(data.error || "Save failed", "error");
+      return;
+    }
+    editingGenreDj.genres = data.genres || [];
+    editingGenreDj.source = "manual";
+    updateGenreStatus();
+    renderGenreList();
+    genreNote(`Saved: ${editingGenreDj.genres.join(", ")}`, "ok");
+  } catch (e) {
+    genreNote("Network error", "error");
+    console.error("Failed to save genres:", e);
+  }
+}
+
+async function clearGenres() {
+  if (!editingGenreDj) return;
+  if (!window.confirm(`Clear the manual genres for ${editingGenreDj.name}? Auto-detected tags take over again.`)) return;
+  genreNote("Clearing…", null);
+  try {
+    const res = await api(`${API_PREFIX}/content/genres/clear`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: editingGenreDj.id }),
+    });
+    if (!res.ok && res.status !== 404) {
+      const data = await res.json().catch(() => ({}));
+      genreNote(data.error || "Clear failed", "error");
+      return;
+    }
+    await loadGenres(true);
+    const refreshed = genreRows.find((r) => r.id === editingGenreDj.id);
+    if (refreshed) {
+      editingGenreDj = refreshed;
+      draftGenres = [...(refreshed.genres || [])];
+      renderGenreChips();
+    }
+    genreNote("Manual override cleared.", "ok");
+  } catch (e) {
+    genreNote("Network error", "error");
+    console.error("Failed to clear genres:", e);
+  }
+}
+
+function updateGenreStatus() {
+  if (!els.genreStatus) return;
+  const manual = genreRows.filter((r) => r.source === "manual").length;
+  const untagged = genreRows.filter((r) => !r.genres || !r.genres.length).length;
+  els.genreStatus.textContent = `${genreRows.length} DJs · ${manual} manual · ${untagged} untagged`;
+}
+
+if (els.genreList && els.genreSearch && els.genreEditor) {
+  els.genreList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".genre-open");
+    if (btn) openGenreEditor(btn.dataset.dj);
+  });
+  els.genreSearch.addEventListener("input", renderGenreList);
+  els.genreEditorBack.addEventListener("click", closeGenreEditor);
+  els.genreAdd.addEventListener("click", addGenreFromInput);
+  els.genreInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addGenreFromInput();
+    }
+  });
+  els.genreChips.addEventListener("click", (e) => {
+    const chip = e.target.closest(".genre-chip-edit");
+    if (!chip) return;
+    draftGenres.splice(Number(chip.dataset.index), 1);
+    renderGenreChips();
+  });
+  els.genreSave.addEventListener("click", saveGenres);
+  els.genreClear.addEventListener("click", clearGenres);
+}
+
 function setRoute(route) {
   for (const link of els.navLinks) {
     link.classList.toggle("active", link.dataset.route === route);
@@ -427,6 +665,8 @@ function setRoute(route) {
     loadOverview();
   } else if (route === "content") {
     loadContent();
+  } else if (route === "genres") {
+    loadGenres();
   }
 }
 

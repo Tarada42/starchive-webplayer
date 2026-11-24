@@ -749,3 +749,52 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* ---- Genres ---- */
+.genre-chips-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.genre-chip {
+  font-size: 0.78em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.18);
+  color: #ddd6fe;
+  white-space: nowrap;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 34px;
+  margin: 10px 0 14px;
+}
+
+.genre-chip-edit {
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85em;
+}
+
+.genre-chip-edit:hover {
+  background: rgba(124, 58, 237, 0.35);
+}
+
+.genre-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 560px;
+  margin-bottom: 16px;
+}
+
+.genre-add-row .field-input {
+  flex: 1;
+}
