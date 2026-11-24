@@ -333,6 +333,17 @@
     ],
     "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
   },
+  "drey_tolosa": {
+    "foundAt": "2026-11-24",
+    "notes": "Found by name, not by handle. Confirm it is the same DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/drey-2"
+    },
+    "sources": [
+      "https://soundcloud.com/drey-2"
+    ],
+    "verifiedAgainst": "Name match: SoundCloud 'Drey' (soundcloud.com/drey-2) hosts a track titled '... drey tolosa ... twitch' and a collab with NatasS, who is also in the team."
+  },
   "elevenermusic": {
     "foundAt": "2026-11-24",
     "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
@@ -430,6 +441,17 @@
       "https://soundcloud.com/l3ftfield"
     ],
     "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "l_natass_l": {
+    "foundAt": "2026-11-24",
+    "notes": "Found by name, not by handle. Confirm it is the same DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/natass"
+    },
+    "sources": [
+      "https://soundcloud.com/natass"
+    ],
+    "verifiedAgainst": "Name match: SoundCloud 'NatasS' (soundcloud.com/natass), matching the archive folder l_natass_l."
   },
   "lavelleofficial": {
     "foundAt": "2026-11-24",
