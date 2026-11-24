@@ -1,0 +1,17 @@
+{
+  "thedjbigd": {
+    "foundAt": "2026-11-24",
+    "verifiedAgainst": "Twitch Helix /users (login thedjbigd, display name TheDJBigD, partner, bio: Darren, Essex, house & progressive house)",
+    "socials": {
+      "x": "https://x.com/TheDJBigD",
+      "youtube": "https://www.youtube.com/@thedjbigd"
+    },
+    "sources": [
+      "https://x.com/TheDJBigD",
+      "https://www.youtube.com/@thedjbigd",
+      "https://soundcloud.com/thedjbigd",
+      "https://www.mixcloud.com/thedjbigd/"
+    ],
+    "notes": "SoundCloud (soundcloud.com/thedjbigd) and Mixcloud (mixcloud.com/thedjbigd) both exist and match the Twitch bio, but the site has no icon support for those keys yet. Instagram could not be checked (rate-limited). The website on file (thedjbigd.uk) is a parked one.com page, not a real site."
+  }
+}

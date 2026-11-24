@@ -12,11 +12,15 @@ import liveHandler from "../api/live.js";
 import {
   isValidDjId,
   mergeDjList,
+  declinesPathFor,
   mergeEditedSocials,
   normalizeDjId,
+  readJsonObject,
   readSocialsFile,
   sanitizeSocials,
   socialsPathFor,
+  suggestionFor,
+  suggestionsPathFor,
   withSocialsLock,
   writeSocialsFile,
 } from "./socials.mjs";
@@ -288,6 +292,8 @@ export function createAdminApp({ dataDir }) {
   // Writes go to the data volume (dj-socials.json), which the public
   // /api/dj-profile endpoint reads. Every change is attributed in the log.
   const socialsFile = socialsPathFor(dataDir);
+  const declinesFile = declinesPathFor(dataDir);
+  const suggestionsFile = suggestionsPathFor(path.join(__dirname, ".."));
 
   function auditActor(req) {
     const user = req.session?.user;
@@ -303,7 +309,13 @@ export function createAdminApp({ dataDir }) {
     try {
       const artistsRes = await callHandler(artistsHandler, { method: "GET", url: "/api/artists" });
       const artists = Array.isArray(artistsRes.data) ? artistsRes.data : [];
-      const djs = mergeDjList(artists, readSocialsFile(socialsFile));
+      const stored = readSocialsFile(socialsFile);
+      const suggestions = readJsonObject(suggestionsFile);
+      const declined = readJsonObject(declinesFile);
+      const djs = mergeDjList(artists, stored).map((row) => ({
+        ...row,
+        suggestion: suggestionFor(row.id, row.socials, suggestions, declined),
+      }));
       res.status(200).json({ djs });
     } catch (e) {
       console.error("GET /api/admin/content/djs failed:", e);
@@ -354,6 +366,24 @@ export function createAdminApp({ dataDir }) {
     } catch (e) {
       console.error("POST /api/admin/content/socials/delete failed:", e);
       return res.status(500).json({ error: "Failed to delete socials" });
+    }
+  });
+
+  app.post("/api/admin/content/suggestions/decline", auth.requireCsrf, async (req, res) => {
+    const dj = normalizeDjId(req.body?.dj);
+    if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
+
+    try {
+      await withSocialsLock(() => {
+        const declined = readJsonObject(declinesFile);
+        declined[dj] = { declinedAt: new Date().toISOString(), by: auditActor(req) };
+        writeSocialsFile(declinesFile, declined);
+      });
+      audit(req, "suggestion.decline", dj);
+      return res.status(200).json({ ok: true, dj });
+    } catch (e) {
+      console.error("POST /api/admin/content/suggestions/decline failed:", e);
+      return res.status(500).json({ error: "Failed to decline suggestion" });
     }
   });
 

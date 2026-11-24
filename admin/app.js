@@ -35,6 +35,11 @@ const els = {
   djDelete: document.getElementById("dj-delete"),
   djFormNote: document.getElementById("dj-form-note"),
   djTwitch: document.getElementById("dj-twitch"),
+  djSuggestion: document.getElementById("dj-suggestion"),
+  djSuggestionNotes: document.getElementById("dj-suggestion-notes"),
+  djSuggestionSources: document.getElementById("dj-suggestion-sources"),
+  djApprove: document.getElementById("dj-approve"),
+  djDecline: document.getElementById("dj-decline"),
 };
 
 async function api(url, options = {}) {
@@ -199,15 +204,77 @@ function setNote(text, kind) {
   els.djFormNote.classList.toggle("error", kind === "error");
 }
 
+function renderSuggestions(suggestion) {
+  const banner = els.djSuggestion;
+  if (!banner) return;
+
+  // The "open" link beside a field is only useful when there is a value to check.
+  for (const link of document.querySelectorAll(".field-open")) {
+    const key = link.dataset.open;
+    const input = els.djForm.querySelector(`[data-social="${key}"]`);
+    const url = input && input.value.trim();
+    if (url && /^https?:\/\//i.test(url)) {
+      link.href = url;
+      link.classList.remove("hidden");
+    } else {
+      link.removeAttribute("href");
+      link.classList.add("hidden");
+    }
+  }
+
+  if (!suggestion) {
+    banner.classList.add("hidden");
+    return;
+  }
+  banner.classList.remove("hidden");
+  els.djSuggestionNotes.textContent = suggestion.notes || "";
+  els.djSuggestionSources.innerHTML = (suggestion.sources || [])
+    .map((src) => `<li><a href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer">${escapeHtml(src)}</a></li>`)
+    .join("");
+}
+
+async function declineSuggestion() {
+  if (!editingDj) return;
+  const djId = editingDj.id;
+  if (!window.confirm(`Decline the suggested links for ${editingDj.name}? The fields will be cleared.`)) return;
+
+  setNote("Declining…", null);
+  try {
+    const res = await api(`${API_PREFIX}/content/suggestions/decline`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: djId }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setNote(data.error || "Decline failed", "error");
+      return;
+    }
+    const row = djRows.find((r) => r.id === djId);
+    if (row) row.suggestion = null;
+    for (const input of els.djForm.querySelectorAll("[data-social]")) input.value = "";
+    renderSuggestions(null);
+    setNote("Suggestion declined. Fields cleared.", "ok");
+    renderDjList();
+  } catch (e) {
+    setNote("Network error", "error");
+    console.error("Failed to decline suggestion:", e);
+  }
+}
+
 function openEditor(id) {
   const row = djRows.find((r) => r.id === id);
   if (!row) return;
   editingDj = row;
   els.djEditorTitle.textContent = `${row.name} · ${row.id}`;
   if (els.djTwitch) els.djTwitch.value = `https://www.twitch.tv/${row.id}`;
+
+  const suggestion = row.suggestion || null;
+  const values = suggestion ? suggestion.socials : row.socials || {};
   for (const input of els.djForm.querySelectorAll("[data-social]")) {
-    input.value = (row.socials || {})[input.dataset.social] || "";
+    input.value = values[input.dataset.social] || "";
   }
+  renderSuggestions(suggestion);
   setNote("", null);
   els.contentListCard.classList.add("hidden");
   els.djEditor.classList.remove("hidden");
@@ -240,6 +307,8 @@ async function saveSocials() {
       return;
     }
     editingDj.socials = data.socials || {};
+    editingDj.suggestion = null;
+    renderSuggestions(null);
     const count = Object.keys(editingDj.socials).length;
     setNote(count ? `Saved ${count} link${count === 1 ? "" : "s"}.` : "All links removed.", "ok");
     els.contentStatus.textContent = contentStatusText();
@@ -296,6 +365,8 @@ if (els.djList && els.djSearch && els.djForm) {
     saveSocials();
   });
   els.djDelete?.addEventListener("click", deleteSocials);
+  els.djApprove?.addEventListener("click", saveSocials);
+  els.djDecline?.addEventListener("click", declineSuggestion);
 }
 
 function setRoute(route) {

@@ -155,3 +155,57 @@ export function withSocialsLock(fn) {
   );
   return run;
 }
+
+/**
+ * Suggestions are produced outside the admin (agent research) and shipped with the
+ * repo; declines are recorded on the data volume so a rejected suggestion never
+ * comes back. Approved suggestions simply become normal stored links.
+ */
+export function readJsonObject(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return {};
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+export function suggestionsPathFor(repoDir) {
+  return path.join(repoDir, "dj-social-suggestions.json");
+}
+
+export function declinesPathFor(dataDir) {
+  return path.join(dataDir, "dj-social-suggestions-declined.json");
+}
+
+/**
+ * The suggestion a row should show, or null. A suggestion is hidden once the DJ has
+ * stored links (nothing left to approve) or once an admin declined it.
+ */
+export function suggestionFor(dj, storedSocials, suggestions, declined) {
+  const id = normalizeDjId(dj);
+  if (!isValidDjId(id)) return null;
+  const entry = suggestions?.[id];
+  if (!entry || typeof entry !== "object") return null;
+
+  // A decline silences the suggestion until a NEWER one is researched for that DJ.
+  const decline = declined && Object.prototype.hasOwnProperty.call(declined, id) ? declined[id] : null;
+  if (decline) {
+    const declinedDay = String(decline.declinedAt || "").slice(0, 10);
+    const foundDay = String(entry.foundAt || "").slice(0, 10);
+    if (!foundDay || !declinedDay || foundDay <= declinedDay) return null;
+  }
+  const socials = sanitizeSocials(entry.socials);
+  if (Object.keys(socials).length === 0) return null;
+  const stored = storedSocials && typeof storedSocials === "object" ? storedSocials : {};
+  const hasStored = Object.keys(stored).length > 0;
+  if (hasStored) return null;
+  return {
+    socials,
+    notes: typeof entry.notes === "string" ? entry.notes : "",
+    sources: Array.isArray(entry.sources) ? entry.sources.filter((s) => typeof s === "string") : [],
+    foundAt: typeof entry.foundAt === "string" ? entry.foundAt : "",
+  };
+}

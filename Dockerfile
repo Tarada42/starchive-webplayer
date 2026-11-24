@@ -17,7 +17,7 @@ COPY assets ./assets
 COPY icon-192.png icon-32.png icon-512.png apple-touch-icon.png ./
 COPY api ./api
 COPY admin ./admin
-COPY avatars.json hidden.json dj-socials.json dad-jokes.json live-excluded.json genres.json genre-overrides.json artist-sources.json ./
+COPY avatars.json hidden.json dj-socials.json dj-social-suggestions.json dad-jokes.json live-excluded.json genres.json genre-overrides.json artist-sources.json ./
 
 # Persistent data directories used at runtime
 RUN mkdir -p /app/data

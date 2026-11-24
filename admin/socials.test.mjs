@@ -12,6 +12,7 @@ import {
   normalizeDjId,
   readSocialsFile,
   sanitizeSocials,
+  suggestionFor,
   socialsPathFor,
   writeSocialsFile,
 } from "./socials.mjs";
@@ -130,6 +131,17 @@ assertEqual(
 
 console.log("\ntwitter/x alias");
 assert(sanitizeSocials({ twitter: "https://twitter.com/legacy" }).twitter === "https://twitter.com/legacy", "accepts the legacy twitter key");
+
+
+console.log("\nsuggestionFor");
+const sugg = { thedjbigd: { socials: { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd", bogus: "nope" }, notes: "n", sources: ["https://x.com/TheDJBigD"] } };
+assertEqual(suggestionFor("thedjbigd", {}, sugg, {}).socials, { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, "returns sanitised suggested links");
+assertEqual(suggestionFor("thedjbigd", { website: "https://x.test" }, sugg, {}), null, "hides the suggestion once links are stored");
+assertEqual(suggestionFor("thedjbigd", {}, sugg, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }), null, "a declined suggestion stays hidden");
+assert(suggestionFor("thedjbigd", {}, { thedjbigd: { ...sugg.thedjbigd, foundAt: "2026-11-30" } }, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }) !== null, "a newer suggestion resurfaces after a decline");
+assertEqual(suggestionFor("unknown", {}, sugg, {}), null, "no suggestion for other DJs");
+assertEqual(suggestionFor("../x", {}, sugg, {}), null, "rejects invalid ids");
+assertEqual(suggestionFor("thedjbigd", {}, { thedjbigd: { socials: {} } }, {}), null, "ignores empty suggestions");
 
 console.log(`\n---\nResults: ${passed} passed, ${failed} failed\n`);
 process.exit(failed === 0 ? 0 : 1);

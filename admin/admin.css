@@ -688,3 +688,44 @@ body {
   opacity: 0.7;
   cursor: default;
 }
+
+/* ---- Content: suggested socials awaiting approval ---- */
+.suggestion {
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  background: rgba(124, 58, 237, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.suggestion-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.suggestion-notes {
+  margin: 0 0 8px;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.suggestion-sources {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 0.85em;
+}
+
+.suggestion-sources a {
+  color: #c4b5fd;
+}
+
+.field-open {
+  margin-left: 8px;
+  font-size: 0.85em;
+  color: #c4b5fd;
+  text-decoration: none;
+}
+
+.field-open:hover {
+  text-decoration: underline;
+}
