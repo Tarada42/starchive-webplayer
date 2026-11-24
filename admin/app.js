@@ -35,6 +35,7 @@ const els = {
   djDelete: document.getElementById("dj-delete"),
   djFormNote: document.getElementById("dj-form-note"),
   djTwitch: document.getElementById("dj-twitch"),
+  djTwitchLink: document.getElementById("dj-twitch-link"),
   djSuggestion: document.getElementById("dj-suggestion"),
   djSuggestionNotes: document.getElementById("dj-suggestion-notes"),
   djSuggestionSources: document.getElementById("dj-suggestion-sources"),
@@ -206,23 +207,39 @@ function setNote(text, kind) {
   els.djFormNote.classList.toggle("error", kind === "error");
 }
 
+
+/**
+ * Show each field's full URL as clickable text beside the label. An <input> only
+ * displays the characters that fit, so this is the only way to read a long link
+ * without scrolling inside the box.
+ */
+function renderFieldLinks() {
+  const pairs = [];
+  if (els.djTwitch && els.djTwitchLink) pairs.push([els.djTwitch, els.djTwitchLink]);
+  for (const input of els.djForm.querySelectorAll("[data-social]")) {
+    const link = els.djForm.querySelector(`.field-url[data-url="${input.dataset.social}"]`);
+    if (link) pairs.push([input, link]);
+  }
+
+  for (const [input, link] of pairs) {
+    const url = (input.value || "").trim();
+    if (/^https?:\/\//i.test(url)) {
+      link.href = url;
+      link.textContent = url;
+      link.hidden = false;
+    } else {
+      link.removeAttribute("href");
+      link.textContent = "";
+      link.hidden = true;
+    }
+  }
+}
+
 function renderSuggestions(suggestion) {
   const banner = els.djSuggestion;
   if (!banner) return;
 
-  // The "open" link beside a field is only useful when there is a value to check.
-  for (const link of document.querySelectorAll(".field-open")) {
-    const key = link.dataset.open;
-    const input = els.djForm.querySelector(`[data-social="${key}"]`);
-    const url = input && input.value.trim();
-    if (url && /^https?:\/\//i.test(url)) {
-      link.href = url;
-      link.classList.remove("hidden");
-    } else {
-      link.removeAttribute("href");
-      link.classList.add("hidden");
-    }
-  }
+  renderFieldLinks();
 
   if (!suggestion) {
     banner.classList.add("hidden");
@@ -256,6 +273,7 @@ async function declineSuggestion() {
     if (row) row.suggestion = null;
     for (const input of els.djForm.querySelectorAll("[data-social]")) input.value = "";
     renderSuggestions(null);
+    renderFieldLinks();
     setNote("Suggestion declined. Fields cleared.", "ok");
     renderDjList();
   } catch (e) {
@@ -277,6 +295,7 @@ function openEditor(id) {
     input.value = values[input.dataset.social] || "";
   }
   renderSuggestions(suggestion);
+  renderFieldLinks();
   setNote("", null);
   els.contentListCard.classList.add("hidden");
   els.djEditor.classList.remove("hidden");
@@ -361,6 +380,7 @@ if (els.djList && els.djSearch && els.djForm) {
     if (btn) openEditor(btn.dataset.dj);
   });
   els.djSearch.addEventListener("input", renderDjList);
+  els.djForm.addEventListener("input", renderFieldLinks);
   els.djEditorBack?.addEventListener("click", closeEditor);
   els.djForm.addEventListener("submit", (e) => {
     e.preventDefault();

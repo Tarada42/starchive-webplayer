@@ -93,24 +93,69 @@
 
           <form id="dj-form" class="dj-form" novalidate>
             <div class="field-grid">
-              <label class="field"><span>Twitch <em class="field-hint">(derived from the DJ handle)</em></span>
-                <input class="field-input" id="dj-twitch" placeholder="https://www.twitch.tv/…" readonly aria-readonly="true" /></label>
-              <label class="field"><span>Website <a class="field-open hidden" data-open="website" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="website" placeholder="https://…" inputmode="url" /></label>
-              <label class="field"><span>X <a class="field-open hidden" data-open="x" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="x" placeholder="https://x.com/…" inputmode="url" /></label>
-              <label class="field"><span>Instagram <a class="field-open hidden" data-open="instagram" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="instagram" placeholder="https://instagram.com/…" inputmode="url" /></label>
-              <label class="field"><span>YouTube <a class="field-open hidden" data-open="youtube" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="youtube" placeholder="https://youtube.com/@…" inputmode="url" /></label>
-              <label class="field"><span>SoundCloud <a class="field-open hidden" data-open="soundcloud" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="soundcloud" placeholder="https://soundcloud.com/…" inputmode="url" /></label>
-              <label class="field"><span>Mixcloud <a class="field-open hidden" data-open="mixcloud" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="mixcloud" placeholder="https://mixcloud.com/…" inputmode="url" /></label>
-              <label class="field"><span>Discord <a class="field-open hidden" data-open="discord" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="discord" placeholder="https://discord.gg/…" inputmode="url" /></label>
-              <label class="field"><span>TikTok <a class="field-open hidden" data-open="tiktok" target="_blank" rel="noopener noreferrer">open ↗</a></span>
-                <input class="field-input" data-social="tiktok" placeholder="https://tiktok.com/@…" inputmode="url" /></label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">Twitch <em class="field-hint">(derived from the DJ handle)</em></span>
+                  <a class="field-url" id="dj-twitch-link" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" id="dj-twitch" placeholder="https://www.twitch.tv/…" readonly aria-readonly="true" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">Website</span>
+                  <a class="field-url" data-url="website" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="website" placeholder="https://…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">X</span>
+                  <a class="field-url" data-url="x" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="x" placeholder="https://x.com/…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">Instagram</span>
+                  <a class="field-url" data-url="instagram" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="instagram" placeholder="https://instagram.com/…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">YouTube</span>
+                  <a class="field-url" data-url="youtube" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="youtube" placeholder="https://youtube.com/@…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">SoundCloud</span>
+                  <a class="field-url" data-url="soundcloud" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="soundcloud" placeholder="https://soundcloud.com/…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">Mixcloud</span>
+                  <a class="field-url" data-url="mixcloud" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="mixcloud" placeholder="https://mixcloud.com/…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">Discord</span>
+                  <a class="field-url" data-url="discord" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="discord" placeholder="https://discord.gg/…" inputmode="url" />
+              </label>
+              <label class="field">
+                <span class="field-head">
+                  <span class="field-name">TikTok</span>
+                  <a class="field-url" data-url="tiktok" target="_blank" rel="noopener noreferrer" hidden></a>
+                </span>
+                <input class="field-input" data-social="tiktok" placeholder="https://tiktok.com/@…" inputmode="url" />
+              </label>
             </div>
             <div class="header-actions">
               <button class="btn btn-primary" type="submit" id="dj-save">Save</button>

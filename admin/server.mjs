@@ -223,9 +223,11 @@ export function createAdminApp({ dataDir }) {
     res.sendFile(path.join(__dirname, "app.js"), { headers: noStore })
   );
 
-  // Login page (GET) — served by the SPA shell.
+  // The SPA shell must never be cached either: a stale HTML file paired with a fresh
+  // admin.js is exactly how a deploy silently fails to appear.
+  const noStoreHtml = { "Cache-Control": "no-store, must-revalidate" };
   app.get("/login", (_req, res) =>
-    res.sendFile(path.join(__dirname, "index.html"))
+    res.sendFile(path.join(__dirname, "index.html"), { headers: noStoreHtml })
   );
 
   // Public auth endpoints.
@@ -392,7 +394,7 @@ export function createAdminApp({ dataDir }) {
 
   // SPA shell for / and /admin*.
   app.get(["/", "/admin*"], (_req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+    res.sendFile(path.join(__dirname, "index.html"), { headers: noStoreHtml });
   });
 
   // Catch-all.
