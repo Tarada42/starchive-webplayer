@@ -9,6 +9,17 @@ import { createAuth } from "./auth.mjs";
 import { verifyAccessJwt, createJwksFetcher } from "./access.mjs";
 import artistsHandler from "../api/artists.js";
 import liveHandler from "../api/live.js";
+import {
+  isValidDjId,
+  mergeDjList,
+  mergeEditedSocials,
+  normalizeDjId,
+  readSocialsFile,
+  sanitizeSocials,
+  socialsPathFor,
+  withSocialsLock,
+  writeSocialsFile,
+} from "./socials.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -270,6 +281,79 @@ export function createAdminApp({ dataDir }) {
     } catch (e) {
       console.error("GET /api/admin/overview failed:", e);
       res.status(500).json({ error: "Failed to build overview" });
+    }
+  });
+
+  // ---- Content: DJ social links -------------------------------------------------
+  // Writes go to the data volume (dj-socials.json), which the public
+  // /api/dj-profile endpoint reads. Every change is attributed in the log.
+  const socialsFile = socialsPathFor(dataDir);
+
+  function auditActor(req) {
+    const user = req.session?.user;
+    if (typeof user === "string") return user;
+    return user?.email || req.accessEmail || "unknown";
+  }
+
+  function audit(req, action, target) {
+    console.log(`[admin audit] ${new Date().toISOString()} ${auditActor(req)} ${action} ${target}`);
+  }
+
+  app.get("/api/admin/content/djs", async (_req, res) => {
+    try {
+      const artistsRes = await callHandler(artistsHandler, { method: "GET", url: "/api/artists" });
+      const artists = Array.isArray(artistsRes.data) ? artistsRes.data : [];
+      const djs = mergeDjList(artists, readSocialsFile(socialsFile));
+      res.status(200).json({ djs });
+    } catch (e) {
+      console.error("GET /api/admin/content/djs failed:", e);
+      res.status(500).json({ error: "Failed to load DJs" });
+    }
+  });
+
+  app.post("/api/admin/content/socials", auth.requireCsrf, async (req, res) => {
+    const dj = normalizeDjId(req.body?.dj);
+    if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
+    const socials = sanitizeSocials(req.body?.socials);
+
+    try {
+      const saved = await withSocialsLock(() => {
+        const all = readSocialsFile(socialsFile);
+        const merged = mergeEditedSocials(all[dj], socials);
+        if (Object.keys(merged).length === 0) {
+          delete all[dj];
+        } else {
+          all[dj] = merged;
+        }
+        writeSocialsFile(socialsFile, all);
+        return merged;
+      });
+      audit(req, "socials.save", dj);
+      return res.status(200).json({ ok: true, dj, socials: saved });
+    } catch (e) {
+      console.error("POST /api/admin/content/socials failed:", e);
+      return res.status(500).json({ error: "Failed to save socials" });
+    }
+  });
+
+  app.post("/api/admin/content/socials/delete", auth.requireCsrf, async (req, res) => {
+    const dj = normalizeDjId(req.body?.dj);
+    if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
+
+    try {
+      const existed = await withSocialsLock(() => {
+        const all = readSocialsFile(socialsFile);
+        if (!(dj in all)) return false;
+        delete all[dj];
+        writeSocialsFile(socialsFile, all);
+        return true;
+      });
+      if (!existed) return res.status(404).json({ error: "No links stored for that DJ" });
+      audit(req, "socials.delete", dj);
+      return res.status(200).json({ ok: true, dj });
+    } catch (e) {
+      console.error("POST /api/admin/content/socials/delete failed:", e);
+      return res.status(500).json({ error: "Failed to delete socials" });
     }
   });
 

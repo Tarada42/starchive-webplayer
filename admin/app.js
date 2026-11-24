@@ -24,6 +24,16 @@ const els = {
   statLive: document.getElementById("stat-live"),
   liveList: document.getElementById("live-list"),
   collectionMeta: document.getElementById("collection-meta"),
+  contentStatus: document.getElementById("content-status"),
+  contentListCard: document.getElementById("content-list-card"),
+  djSearch: document.getElementById("dj-search"),
+  djList: document.getElementById("dj-list"),
+  djEditor: document.getElementById("dj-editor"),
+  djEditorTitle: document.getElementById("dj-editor-title"),
+  djEditorBack: document.getElementById("dj-editor-back"),
+  djForm: document.getElementById("dj-form"),
+  djDelete: document.getElementById("dj-delete"),
+  djFormNote: document.getElementById("dj-form-note"),
 };
 
 async function api(url, options = {}) {
@@ -123,6 +133,169 @@ function escapeHtml(text) {
 
 
 
+
+// ---- Content: DJ social links ----------------------------------------------
+let djRows = [];
+let editingDj = null;
+
+function contentStatusText() {
+  const withLinks = djRows.filter((r) => Object.keys(r.socials || {}).length).length;
+  return `${djRows.length} DJs · ${withLinks} with links`;
+}
+
+function renderDjList() {
+  if (!els.djList) return;
+  const q = (els.djSearch.value || "").trim().toLowerCase();
+  const rows = djRows.filter(
+    (r) => !q || r.name.toLowerCase().includes(q) || r.id.includes(q)
+  );
+  if (!rows.length) {
+    els.djList.innerHTML = '<li class="empty">No DJs match that filter.</li>';
+    return;
+  }
+  els.djList.innerHTML = rows
+    .map((r) => {
+      const count = Object.keys(r.socials || {}).length;
+      const badge = count
+        ? `<span class="dj-badge">${count} link${count === 1 ? "" : "s"}</span>`
+        : '<span class="dj-id">no links</span>';
+      return `<li>
+        <button class="btn btn-secondary dj-open" type="button" data-dj="${escapeHtml(r.id)}">
+          <span class="dj-name">${escapeHtml(r.name)}</span>
+          <span class="dj-id">${escapeHtml(r.id)}</span>
+        </button>
+        ${badge}
+      </li>`;
+    })
+    .join("");
+}
+
+async function loadContent(force = false) {
+  if (!els.djList) return;
+  if (djRows.length && !force) {
+    renderDjList();
+    return;
+  }
+  els.contentStatus.textContent = "Loading…";
+  try {
+    const res = await api(`${API_PREFIX}/content/djs`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    djRows = Array.isArray(data.djs) ? data.djs : [];
+    els.contentStatus.textContent = contentStatusText();
+    renderDjList();
+  } catch (e) {
+    els.contentStatus.textContent = "Could not load DJs";
+    els.djList.innerHTML = '<li class="empty">Failed to load. Try again.</li>';
+    console.error("Failed to load content:", e);
+  }
+}
+
+function setNote(text, kind) {
+  if (!els.djFormNote) return;
+  els.djFormNote.textContent = text || "";
+  els.djFormNote.classList.toggle("ok", kind === "ok");
+  els.djFormNote.classList.toggle("error", kind === "error");
+}
+
+function openEditor(id) {
+  const row = djRows.find((r) => r.id === id);
+  if (!row) return;
+  editingDj = row;
+  els.djEditorTitle.textContent = `${row.name} · ${row.id}`;
+  for (const input of els.djForm.querySelectorAll("[data-social]")) {
+    input.value = (row.socials || {})[input.dataset.social] || "";
+  }
+  setNote("", null);
+  els.contentListCard.classList.add("hidden");
+  els.djEditor.classList.remove("hidden");
+}
+
+function closeEditor() {
+  editingDj = null;
+  els.djEditor.classList.add("hidden");
+  els.contentListCard.classList.remove("hidden");
+  setNote("", null);
+}
+
+async function saveSocials() {
+  if (!editingDj) return;
+  const socials = {};
+  for (const input of els.djForm.querySelectorAll("[data-social]")) {
+    const value = input.value.trim();
+    if (value) socials[input.dataset.social] = value;
+  }
+  setNote("Saving…", null);
+  try {
+    const res = await api(`${API_PREFIX}/content/socials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: editingDj.id, socials }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setNote(data.error || "Save failed", "error");
+      return;
+    }
+    editingDj.socials = data.socials || {};
+    const count = Object.keys(editingDj.socials).length;
+    setNote(count ? `Saved ${count} link${count === 1 ? "" : "s"}.` : "All links removed.", "ok");
+    els.contentStatus.textContent = contentStatusText();
+    renderDjList();
+    const savedId = editingDj.id;
+    window.setTimeout(() => {
+      if (editingDj && editingDj.id === savedId) closeEditor();
+    }, 900);
+  } catch (e) {
+    setNote("Network error", "error");
+    console.error("Failed to save socials:", e);
+  }
+}
+
+async function deleteSocials() {
+  if (!editingDj) return;
+  if (!window.confirm(`Remove all links for ${editingDj.name}?`)) return;
+  setNote("Removing…", null);
+  try {
+    const res = await api(`${API_PREFIX}/content/socials/delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: editingDj.id }),
+    });
+    if (!res.ok && res.status !== 404) {
+      const data = await res.json().catch(() => ({}));
+      setNote(data.error || "Delete failed", "error");
+      return;
+    }
+    editingDj.socials = {};
+    for (const input of els.djForm.querySelectorAll("[data-social]")) input.value = "";
+    setNote("All links removed.", "ok");
+    els.contentStatus.textContent = contentStatusText();
+    renderDjList();
+    const clearedId = editingDj.id;
+    window.setTimeout(() => {
+      if (editingDj && editingDj.id === clearedId) closeEditor();
+    }, 900);
+  } catch (e) {
+    setNote("Network error", "error");
+    console.error("Failed to delete socials:", e);
+  }
+}
+
+if (els.djList && els.djSearch && els.djForm) {
+  els.djList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".dj-open");
+    if (btn) openEditor(btn.dataset.dj);
+  });
+  els.djSearch.addEventListener("input", renderDjList);
+  els.djEditorBack?.addEventListener("click", closeEditor);
+  els.djForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveSocials();
+  });
+  els.djDelete?.addEventListener("click", deleteSocials);
+}
+
 function setRoute(route) {
   for (const link of els.navLinks) {
     link.classList.toggle("active", link.dataset.route === route);
@@ -137,6 +310,8 @@ function setRoute(route) {
   }
   if (route === "overview") {
     loadOverview();
+  } else if (route === "content") {
+    loadContent();
   }
 }
 

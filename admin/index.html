@@ -63,9 +63,47 @@
       </section>
 
       <section class="page hidden" id="page-content">
-        <div class="card empty-state">
-          <h2 class="card-title">Content</h2>
-          <p>Artist metadata, social links, and thumbnail management. Coming in phase 3.</p>
+        <div class="card" id="content-list-card">
+          <div class="card-header">
+            <h2 class="card-title">Social links</h2>
+            <span class="collection-meta" id="content-status"></span>
+          </div>
+          <div class="field-row">
+            <input id="dj-search" class="field-input" type="search" placeholder="Filter DJs…" autocomplete="off" aria-label="Filter DJs" />
+          </div>
+          <ul class="dj-list" id="dj-list">
+            <li class="empty">Loading…</li>
+          </ul>
+        </div>
+
+        <div class="card hidden" id="dj-editor">
+          <div class="card-header">
+            <h2 class="card-title" id="dj-editor-title">Edit DJ</h2>
+            <button class="btn btn-secondary" id="dj-editor-back" type="button">Back to list</button>
+          </div>
+          <form id="dj-form" class="dj-form" novalidate>
+            <div class="field-grid">
+              <label class="field"><span>Twitch</span>
+                <input class="field-input" data-social="twitch" placeholder="https://www.twitch.tv/…" inputmode="url" /></label>
+              <label class="field"><span>Website</span>
+                <input class="field-input" data-social="website" placeholder="https://…" inputmode="url" /></label>
+              <label class="field"><span>X</span>
+                <input class="field-input" data-social="x" placeholder="https://x.com/…" inputmode="url" /></label>
+              <label class="field"><span>Instagram</span>
+                <input class="field-input" data-social="instagram" placeholder="https://instagram.com/…" inputmode="url" /></label>
+              <label class="field"><span>YouTube</span>
+                <input class="field-input" data-social="youtube" placeholder="https://youtube.com/@…" inputmode="url" /></label>
+              <label class="field"><span>Discord</span>
+                <input class="field-input" data-social="discord" placeholder="https://discord.gg/…" inputmode="url" /></label>
+              <label class="field"><span>TikTok</span>
+                <input class="field-input" data-social="tiktok" placeholder="https://tiktok.com/@…" inputmode="url" /></label>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-primary" type="submit" id="dj-save">Save</button>
+              <button class="btn btn-secondary" type="button" id="dj-delete">Remove all links</button>
+            </div>
+            <p class="form-note" id="dj-form-note" role="status"></p>
+          </form>
         </div>
       </section>
 

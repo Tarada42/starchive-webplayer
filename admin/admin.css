@@ -584,3 +584,94 @@ body {
   margin: 0;
   color: var(--text-2);
 }
+
+/* ---- Content: DJ social links editor ---- */
+.field-row {
+  margin: 0 0 12px;
+}
+
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+}
+
+.field-input:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 1px;
+}
+
+.dj-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 44vh;
+  overflow-y: auto;
+}
+
+.dj-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dj-list li:last-child {
+  border-bottom: none;
+}
+
+.dj-list .dj-name {
+  font-weight: 600;
+}
+
+.dj-list .dj-id {
+  opacity: 0.6;
+  font-size: 0.85em;
+}
+
+.dj-list .dj-badge {
+  font-size: 0.75em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.18);
+  color: #c4b5fd;
+  white-space: nowrap;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9em;
+}
+
+.field > span {
+  opacity: 0.75;
+}
+
+.form-note {
+  margin: 10px 0 0;
+  font-size: 0.9em;
+  min-height: 1.2em;
+}
+
+.form-note.error {
+  color: #fca5a5;
+}
+
+.form-note.ok {
+  color: #86efac;
+}
