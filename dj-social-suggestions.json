@@ -127,6 +127,17 @@
     ],
     "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
   },
+  "dj_antox": {
+    "foundAt": "2026-11-24",
+    "notes": "Found by searching the DJ's name, not by the handle. Confirm it is the same person before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/djantoxam"
+    },
+    "sources": [
+      "https://soundcloud.com/djantoxam"
+    ],
+    "verifiedAgainst": "Name match: SoundCloud profile 'DJ Antox' (soundcloud.com/djantoxam). No link on the Twitch bio to confirm it."
+  },
   "dj_delirious": {
     "foundAt": "2026-11-24",
     "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
