@@ -229,7 +229,10 @@ function setNote(text, kind) {
  * without scrolling inside the box.
  */
 
-/** Tag the fields whose value came from a suggestion rather than a saved link. */
+/**
+ * Tag the fields whose value came from a suggestion, and give each one its own
+ * accept/reject pair so a single bad guess never has to be approved in bulk.
+ */
 function markSuggestedFields(suggestion) {
   const suggested = (suggestion && suggestion.socials) || {};
   for (const label of els.djForm.querySelectorAll(".field")) {
@@ -237,13 +240,65 @@ function markSuggestedFields(suggestion) {
     const head = label.querySelector(".field-head");
     if (!input || !head) continue;
     head.querySelector(".field-tag")?.remove();
-    if (suggested[input.dataset.social]) {
-      const tag = document.createElement("span");
-      tag.className = "field-tag";
-      tag.textContent = "suggested";
-      head.appendChild(tag);
-    }
+    head.querySelector(".field-actions")?.remove();
+    const key = input.dataset.social;
+    if (!suggested[key]) continue;
+
+    const tag = document.createElement("span");
+    tag.className = "field-tag";
+    tag.dataset.state = "suggested";
+    tag.textContent = "suggested";
+    head.appendChild(tag);
+
+    const actions = document.createElement("span");
+    actions.className = "field-actions";
+    actions.innerHTML =
+      `<button type="button" class="mini-btn mini-accept" data-key="${key}" title="Keep this suggested link">✓</button>` +
+      `<button type="button" class="mini-btn mini-reject" data-key="${key}" title="Reject this link">✕</button>`;
+    head.appendChild(actions);
   }
+}
+
+/** How many suggested links are still un-reviewed in the open editor. */
+function pendingSuggestions() {
+  return els.djForm.querySelectorAll('.field-tag[data-state="suggested"]').length;
+}
+
+/** Reject one suggested link: clear the field and remember the refusal. */
+async function rejectSuggestionKey(key) {
+  if (!editingDj) return;
+  const input = els.djForm.querySelector(`[data-social="${key}"]`);
+  if (input) input.value = "";
+  const label = input?.closest(".field");
+  label?.querySelector(".field-actions")?.remove();
+  const tag = label?.querySelector(".field-tag");
+  if (tag) tag.remove();
+  if (editingDj.suggestion && editingDj.suggestion.socials) delete editingDj.suggestion.socials[key];
+  renderFieldLinks();
+  renderSuggestions(editingDj.suggestion);
+  setNote(`Rejected the suggested ${key} link.`, null);
+  try {
+    await api(`${API_PREFIX}/content/suggestions/decline`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dj: editingDj.id, keys: [key] }),
+    });
+  } catch (e) {
+    console.error("Failed to record the rejection:", e);
+  }
+}
+
+/** Accept one suggested link without saving the whole form yet. */
+function acceptSuggestionKey(key) {
+  const input = els.djForm.querySelector(`[data-social="${key}"]`);
+  const label = input?.closest(".field");
+  label?.querySelector(".field-actions")?.remove();
+  const tag = label?.querySelector(".field-tag");
+  if (tag) {
+    tag.dataset.state = "accepted";
+    tag.textContent = "accepted";
+  }
+  setNote("Accepted — remember to save.", "ok");
 }
 
 function renderFieldLinks() {
@@ -278,9 +333,15 @@ function renderSuggestions(suggestion) {
     banner.classList.add("hidden");
     return;
   }
+  if (!Object.keys(suggestion.socials || {}).length) {
+    banner.classList.add("hidden");
+    return;
+  }
   banner.classList.remove("hidden");
   els.djSuggestionNotes.textContent = suggestion.notes || "";
-  els.djSuggestionSources.innerHTML = (suggestion.sources || [])
+  // List only the links that are still pending: a rejected one disappears from here too.
+  const pendingUrls = Object.values(suggestion.socials || {});
+  els.djSuggestionSources.innerHTML = pendingUrls
     .map((src) => `<li><a href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer">${escapeHtml(src)}</a></li>`)
     .join("");
 }
@@ -345,6 +406,16 @@ function closeEditor() {
 
 async function saveSocials() {
   if (!editingDj) return;
+
+  const pending = pendingSuggestions();
+  if (pending > 0) {
+    const ok = window.confirm(
+      `This will approve ${pending} suggested link${pending === 1 ? "" : "s"} for ${editingDj.name}.\n\n` +
+        "Only continue if you have opened and verified every one of them. " +
+        "To approve them one by one, close this and use the ✓ / ✕ buttons beside each field."
+    );
+    if (!ok) return;
+  }
   const socials = {};
   for (const input of els.djForm.querySelectorAll("[data-social]")) {
     const value = input.value.trim();
@@ -416,6 +487,12 @@ if (els.djList && els.djSearch && els.djForm) {
   });
   els.djSearch.addEventListener("input", renderDjList);
   els.djForm.addEventListener("input", renderFieldLinks);
+  els.djForm.addEventListener("click", (e) => {
+    const accept = e.target.closest(".mini-accept");
+    if (accept) return acceptSuggestionKey(accept.dataset.key);
+    const reject = e.target.closest(".mini-reject");
+    if (reject) return rejectSuggestionKey(reject.dataset.key);
+  });
   els.djEditorBack?.addEventListener("click", closeEditor);
   els.djForm.addEventListener("submit", (e) => {
     e.preventDefault();

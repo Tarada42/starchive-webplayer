@@ -38,6 +38,20 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/** Social keys an admin may reject individually (mirrors the editor's fields). */
+const ALLOWED_GENRE_SAFE_KEYS = new Set([
+  "twitch",
+  "website",
+  "x",
+  "twitter",
+  "instagram",
+  "youtube",
+  "soundcloud",
+  "mixcloud",
+  "discord",
+  "tiktok",
+]);
+
 function readJsonSafe(p, fallback) {
   try {
     if (!fs.existsSync(p)) return fallback;
@@ -391,14 +405,37 @@ export function createAdminApp({ dataDir }) {
     const dj = normalizeDjId(req.body?.dj);
     if (!isValidDjId(dj)) return res.status(400).json({ error: "Invalid DJ id" });
 
+    // keys = reject just those links; absent = reject the whole DJ's suggestion.
+    const rawKeys = req.body?.keys;
+    let keys = null;
+    if (rawKeys !== undefined) {
+      if (!Array.isArray(rawKeys) || rawKeys.length === 0) {
+        return res.status(400).json({ error: "keys must be a non-empty list" });
+      }
+      if (rawKeys.some((k) => !ALLOWED_GENRE_SAFE_KEYS.has(k))) {
+        return res.status(400).json({ error: "Invalid social key" });
+      }
+      keys = rawKeys;
+    }
+
     try {
       await withSocialsLock(() => {
         const declined = readJsonObject(declinesFile);
-        declined[dj] = { declinedAt: new Date().toISOString(), by: auditActor(req) };
+        const now = new Date().toISOString();
+        if (!keys) {
+          declined[dj] = { declinedAt: now, by: auditActor(req) };
+        } else {
+          const entry = declined[dj] && typeof declined[dj] === "object" ? declined[dj] : {};
+          if (!entry.keys || typeof entry.keys !== "object") entry.keys = {};
+          for (const key of keys) entry.keys[key] = now;
+          entry.declinedAt = now;
+          entry.by = auditActor(req);
+          declined[dj] = entry;
+        }
         writeSocialsFile(declinesFile, declined);
       });
-      audit(req, "suggestion.decline", dj);
-      return res.status(200).json({ ok: true, dj });
+      audit(req, "suggestion.decline", keys ? `${dj} [${keys.join(", ")}]` : dj);
+      return res.status(200).json({ ok: true, dj, keys });
     } catch (e) {
       console.error("POST /api/admin/content/suggestions/decline failed:", e);
       return res.status(500).json({ error: "Failed to decline suggestion" });

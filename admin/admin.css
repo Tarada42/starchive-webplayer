@@ -798,3 +798,38 @@ body {
 .genre-add-row .field-input {
   flex: 1;
 }
+
+/* ---- Per-link accept / reject ---- */
+.field-actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.mini-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 0.8em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mini-accept:hover {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.mini-reject:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.field-tag[data-state="accepted"] {
+  background: rgba(34, 197, 94, 0.18);
+  color: #bbf7d0;
+}

@@ -146,6 +146,15 @@ const gaps = suggestionFor("thedjbigd", { website: "https://x.test" }, sugg, {})
 assertEqual(gaps && gaps.socials, { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, "a stored link only removes that one key from the suggestion");
 assertEqual(suggestionFor("thedjbigd", { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, sugg, {}), null, "no suggestion left once every suggested key is stored");
 assertEqual(suggestionFor("thedjbigd", {}, sugg, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }), null, "a declined suggestion stays hidden");
+
+const perKey = suggestionFor("thedjbigd", {}, sugg, {
+  thedjbigd: { declinedAt: "2026-11-24T10:00:00Z", keys: { x: "2026-11-24T10:00:00Z" } },
+});
+assertEqual(perKey && perKey.socials, { youtube: "https://www.youtube.com/@thedjbigd" }, "a rejected key is dropped, the rest survive");
+const newerPerKey = suggestionFor("thedjbigd", {}, { thedjbigd: { ...sugg.thedjbigd, foundAt: "2026-12-01" } }, {
+  thedjbigd: { declinedAt: "2026-11-24T10:00:00Z", keys: { x: "2026-11-24T10:00:00Z" } },
+});
+assert(newerPerKey && newerPerKey.socials.x, "a rejected key resurfaces with a newer suggestion");
 assert(suggestionFor("thedjbigd", {}, { thedjbigd: { ...sugg.thedjbigd, foundAt: "2026-11-30" } }, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }) !== null, "a newer suggestion resurfaces after a decline");
 assertEqual(suggestionFor("unknown", {}, sugg, {}), null, "no suggestion for other DJs");
 assertEqual(suggestionFor("../x", {}, sugg, {}), null, "rejects invalid ids");

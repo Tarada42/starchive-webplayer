@@ -194,19 +194,31 @@ export function suggestionFor(dj, storedSocials, suggestions, declined) {
 
   // A decline silences the suggestion until a NEWER one is researched for that DJ.
   const decline = declined && Object.prototype.hasOwnProperty.call(declined, id) ? declined[id] : null;
+  const foundDay = String(entry.foundAt || "").slice(0, 10);
+  let wholeDjDeclined = false;
   if (decline) {
     const declinedDay = String(decline.declinedAt || "").slice(0, 10);
-    const foundDay = String(entry.foundAt || "").slice(0, 10);
-    if (!foundDay || !declinedDay || foundDay <= declinedDay) return null;
+    // No per-key map means the admin declined the DJ outright.
+    if (!decline.keys || typeof decline.keys !== "object") {
+      wholeDjDeclined = !(foundDay && declinedDay && foundDay > declinedDay);
+    }
   }
+  if (wholeDjDeclined) return null;
   // A DJ can have some links stored and still be missing others: the suggestion fills
   // the gaps rather than being suppressed by a single existing link.
   const socials = sanitizeSocials(entry.socials);
   if (Object.keys(socials).length === 0) return null;
   const stored = storedSocials && typeof storedSocials === "object" ? storedSocials : {};
   const gaps = {};
+  const declinedKeys = decline && decline.keys && typeof decline.keys === "object" ? decline.keys : {};
   for (const [key, value] of Object.entries(socials)) {
-    if (!stored[key]) gaps[key] = value;
+    if (stored[key]) continue;
+    const perKey = declinedKeys[key];
+    if (perKey) {
+      const keyDay = String(perKey).slice(0, 10);
+      if (!foundDay || !keyDay || foundDay <= keyDay) continue;
+    }
+    gaps[key] = value;
   }
   if (Object.keys(gaps).length === 0) return null;
   return {
