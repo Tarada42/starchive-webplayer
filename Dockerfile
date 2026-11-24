@@ -20,7 +20,7 @@ COPY admin ./admin
 COPY avatars.json hidden.json dj-socials.json dad-jokes.json live-excluded.json genres.json genre-overrides.json artist-sources.json ./
 
 # Persistent data directories used at runtime
-RUN mkdir -p /app/data/events /app/data/metrics
+RUN mkdir -p /app/data
 
 ENV PORT=8080
 EXPOSE 8080

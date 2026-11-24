@@ -379,16 +379,6 @@
         else if (state === "unavailable") status.textContent = "Stream unavailable — press Play to retry";
       }
 
-      function sendStallBeacon(artist, reason) {
-        const body = JSON.stringify({ type: "stream_stall", artist: artist || "", track: reason });
-        try {
-          if (navigator.sendBeacon) {
-            navigator.sendBeacon("/api/events", new Blob([body], { type: "application/json" }));
-          } else {
-            fetch("/api/events", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
-          }
-        } catch (e) {}
-      }
 
       function scheduleReconnect(audio, reason) {
         if (activeAudio !== audio || !audio._isPlaying || audio._userStopped) return;
@@ -405,7 +395,6 @@
         }
         audio._attempts += 1;
         updatePlayerUI(audio.closest(".dj-card"), "reconnecting", audio._attempts);
-        sendStallBeacon(audio._djId, reason);
         const delays = [300, 900, 2000];
         const delay = delays[audio._attempts - 1] || 2000;
         audio._reconnectTimer = setTimeout(() => {
