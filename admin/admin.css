@@ -833,3 +833,71 @@ body {
   background: rgba(34, 197, 94, 0.18);
   color: #bbf7d0;
 }
+
+/* ---- Per-link approve / reject (labelled) ---- */
+.link-btn {
+  font: inherit;
+  font-size: 0.75em;
+  line-height: 1;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  cursor: pointer;
+}
+
+.link-accept {
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #bbf7d0;
+}
+
+.link-accept:hover {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.link-reject {
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fecaca;
+}
+
+.link-reject:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.admin-build {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.68em;
+  opacity: 0.45;
+  letter-spacing: 0.02em;
+}
+
+.field-head {
+  align-items: center;
+}
+
+.suggestion-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.suggestion-key {
+  min-width: 92px;
+  font-size: 0.8em;
+  opacity: 0.6;
+  text-transform: capitalize;
+}
+
+.suggestion-actions {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.suggestion-sources li a {
+  word-break: break-all;
+}

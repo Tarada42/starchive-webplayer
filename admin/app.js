@@ -1,5 +1,7 @@
 // admin/app.js — vanilla JS admin SPA.
 const API_PREFIX = "/api/admin";
+/** Bumped on every deploy so a stale browser can be spotted instantly. */
+const ADMIN_BUILD = "2026-11-24 per-link-v4";
 
 let csrfToken = "";
 let currentUser = null;
@@ -253,8 +255,8 @@ function markSuggestedFields(suggestion) {
     const actions = document.createElement("span");
     actions.className = "field-actions";
     actions.innerHTML =
-      `<button type="button" class="mini-btn mini-accept" data-key="${key}" title="Keep this suggested link">✓</button>` +
-      `<button type="button" class="mini-btn mini-reject" data-key="${key}" title="Reject this link">✕</button>`;
+      `<button type="button" class="link-btn link-accept" data-key="${key}" title="Save this suggested link on its own">Approve</button>` +
+      `<button type="button" class="link-btn link-reject" data-key="${key}" title="Discard this suggested link">Reject</button>`;
     head.appendChild(actions);
   }
 }
@@ -377,11 +379,26 @@ function renderSuggestions(suggestion) {
   }
   banner.classList.remove("hidden");
   els.djSuggestionNotes.textContent = suggestion.notes || "";
-  // List only the links that are still pending: a rejected one disappears from here too.
-  const pendingUrls = Object.values(suggestion.socials || {});
-  els.djSuggestionSources.innerHTML = pendingUrls
-    .map((src) => `<li><a href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer">${escapeHtml(src)}</a></li>`)
+  // The pending links are the review list: each row carries its own Approve / Reject,
+  // so approval happens right where the admin is looking, not only on the fields below.
+  const entries = Object.entries(suggestion.socials || {});
+  els.djSuggestionSources.innerHTML = entries
+    .map(
+      ([key, src]) => `<li class="suggestion-row">
+        <span class="suggestion-key">${escapeHtml(key)}</span>
+        <a href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer">${escapeHtml(src)}</a>
+        <span class="suggestion-actions">
+          <button type="button" class="link-btn link-accept" data-key="${escapeHtml(key)}">Approve</button>
+          <button type="button" class="link-btn link-reject" data-key="${escapeHtml(key)}">Reject</button>
+        </span>
+      </li>`
+    )
     .join("");
+
+  const title = els.djSuggestion.querySelector(".suggestion-title");
+  if (title) {
+    title.textContent = `Suggested from public sources — ${entries.length} link${entries.length === 1 ? "" : "s"} to review. Approve each one, or use Approve & save below.`;
+  }
 }
 
 async function declineSuggestion() {
@@ -525,10 +542,16 @@ if (els.djList && els.djSearch && els.djForm) {
   });
   els.djSearch.addEventListener("input", renderDjList);
   els.djForm.addEventListener("input", renderFieldLinks);
-  els.djForm.addEventListener("click", (e) => {
-    const accept = e.target.closest(".mini-accept");
+  els.djSuggestionSources?.addEventListener("click", (e) => {
+    const accept = e.target.closest(".link-accept");
     if (accept) return acceptSuggestionKey(accept.dataset.key);
-    const reject = e.target.closest(".mini-reject");
+    const reject = e.target.closest(".link-reject");
+    if (reject) return rejectSuggestionKey(reject.dataset.key);
+  });
+  els.djForm.addEventListener("click", (e) => {
+    const accept = e.target.closest(".link-accept");
+    if (accept) return acceptSuggestionKey(accept.dataset.key);
+    const reject = e.target.closest(".link-reject");
     if (reject) return rejectSuggestionKey(reject.dataset.key);
   });
   els.djEditorBack?.addEventListener("click", closeEditor);
@@ -842,6 +865,17 @@ els.menuToggle.addEventListener("click", () => {
 });
 
 window.addEventListener("hashchange", updateRoute);
+
+// Show the build in the sidebar so "am I on the current admin?" is answerable at a glance.
+(function stampBuild() {
+  const brand = document.querySelector(".sidebar-brand");
+  if (!brand || document.getElementById("admin-build")) return;
+  const el = document.createElement("span");
+  el.id = "admin-build";
+  el.className = "admin-build";
+  el.textContent = ADMIN_BUILD;
+  brand.appendChild(el);
+})();
 
 document.addEventListener("DOMContentLoaded", async () => {
   const ok = await loadSession();
