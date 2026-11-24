@@ -1,12 +1,720 @@
 {
+  "adamrackham": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/adamrackham",
+      "youtube": "https://youtube.com/@adamrackham"
+    },
+    "sources": [
+      "https://x.com/adamrackham",
+      "https://youtube.com/@adamrackham"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "andy_gravity": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/andy_gravity",
+      "youtube": "https://youtube.com/@andy_gravity"
+    },
+    "sources": [
+      "https://x.com/andy_gravity",
+      "https://youtube.com/@andy_gravity"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "baylightbrew": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/baylightbrew/"
+    },
+    "sources": [
+      "https://www.mixcloud.com/baylightbrew/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "blaugrana": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/blaugrana/",
+      "soundcloud": "https://soundcloud.com/blaugrana"
+    },
+    "sources": [
+      "https://soundcloud.com/blaugrana",
+      "https://www.mixcloud.com/blaugrana/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "burner71": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/burner71",
+      "x": "https://x.com/burner71"
+    },
+    "sources": [
+      "https://x.com/burner71",
+      "https://soundcloud.com/burner71"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "bwprincess": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/bwprincess",
+      "youtube": "https://youtube.com/@bwprincess"
+    },
+    "sources": [
+      "https://youtube.com/@bwprincess",
+      "https://soundcloud.com/bwprincess"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "catch22": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/catch22/",
+      "soundcloud": "https://soundcloud.com/catch22",
+      "x": "https://x.com/catch22",
+      "youtube": "https://youtube.com/@catch22"
+    },
+    "sources": [
+      "https://x.com/catch22",
+      "https://youtube.com/@catch22",
+      "https://soundcloud.com/catch22",
+      "https://www.mixcloud.com/catch22/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "chrisshawofficial": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@chrisshawofficial"
+    },
+    "sources": [
+      "https://youtube.com/@chrisshawofficial"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "davemaco1": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/davemaco1"
+    },
+    "sources": [
+      "https://x.com/davemaco1"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "deejaybuffoon": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/deejaybuffoon/",
+      "youtube": "https://youtube.com/@deejaybuffoon"
+    },
+    "sources": [
+      "https://youtube.com/@deejaybuffoon",
+      "https://www.mixcloud.com/deejaybuffoon/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dj_delirious": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/dj_delirious/",
+      "youtube": "https://youtube.com/@dj_delirious"
+    },
+    "sources": [
+      "https://youtube.com/@dj_delirious",
+      "https://www.mixcloud.com/dj_delirious/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dj_quick_": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/dj_quick_"
+    },
+    "sources": [
+      "https://x.com/dj_quick_"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dj_simonsayz": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@dj_simonsayz"
+    },
+    "sources": [
+      "https://youtube.com/@dj_simonsayz"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dj_td": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/dj_td",
+      "youtube": "https://youtube.com/@dj_td"
+    },
+    "sources": [
+      "https://x.com/dj_td",
+      "https://youtube.com/@dj_td"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dj_yula": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@dj_yula"
+    },
+    "sources": [
+      "https://youtube.com/@dj_yula"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djbasscrasher": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djbasscrasher",
+      "youtube": "https://youtube.com/@djbasscrasher"
+    },
+    "sources": [
+      "https://x.com/djbasscrasher",
+      "https://youtube.com/@djbasscrasher"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djcquence": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djcquence",
+      "youtube": "https://youtube.com/@djcquence"
+    },
+    "sources": [
+      "https://x.com/djcquence",
+      "https://youtube.com/@djcquence"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djcti": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djcti",
+      "youtube": "https://youtube.com/@djcti"
+    },
+    "sources": [
+      "https://x.com/djcti",
+      "https://youtube.com/@djcti"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djgamma1": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djgamma1"
+    },
+    "sources": [
+      "https://x.com/djgamma1"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djog3": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/djog3/",
+      "x": "https://x.com/djog3",
+      "youtube": "https://youtube.com/@djog3"
+    },
+    "sources": [
+      "https://x.com/djog3",
+      "https://youtube.com/@djog3",
+      "https://www.mixcloud.com/djog3/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djpsyclone": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djpsyclone",
+      "youtube": "https://youtube.com/@djpsyclone"
+    },
+    "sources": [
+      "https://x.com/djpsyclone",
+      "https://youtube.com/@djpsyclone"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djsigvaldason": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/djsigvaldason",
+      "youtube": "https://youtube.com/@djsigvaldason"
+    },
+    "sources": [
+      "https://x.com/djsigvaldason",
+      "https://youtube.com/@djsigvaldason"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djsoo": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/djsoo",
+      "x": "https://x.com/djsoo",
+      "youtube": "https://youtube.com/@djsoo"
+    },
+    "sources": [
+      "https://x.com/djsoo",
+      "https://youtube.com/@djsoo",
+      "https://soundcloud.com/djsoo"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "djweerisky": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/djweerisky/",
+      "soundcloud": "https://soundcloud.com/djweerisky",
+      "x": "https://x.com/djweerisky",
+      "youtube": "https://youtube.com/@djweerisky"
+    },
+    "sources": [
+      "https://x.com/djweerisky",
+      "https://youtube.com/@djweerisky",
+      "https://soundcloud.com/djweerisky",
+      "https://www.mixcloud.com/djweerisky/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "dmdippingsauce": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/dmdippingsauce",
+      "youtube": "https://youtube.com/@dmdippingsauce"
+    },
+    "sources": [
+      "https://x.com/dmdippingsauce",
+      "https://youtube.com/@dmdippingsauce"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "elevenermusic": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@elevenermusic"
+    },
+    "sources": [
+      "https://youtube.com/@elevenermusic"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "elynaen": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/elynaen/",
+      "soundcloud": "https://soundcloud.com/elynaen",
+      "youtube": "https://youtube.com/@elynaen"
+    },
+    "sources": [
+      "https://youtube.com/@elynaen",
+      "https://soundcloud.com/elynaen",
+      "https://www.mixcloud.com/elynaen/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "ezkillhardcore": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@ezkillhardcore"
+    },
+    "sources": [
+      "https://youtube.com/@ezkillhardcore"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "fucsiaworld": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/fucsiaworld",
+      "youtube": "https://youtube.com/@fucsiaworld"
+    },
+    "sources": [
+      "https://x.com/fucsiaworld",
+      "https://youtube.com/@fucsiaworld"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "jacinta_wolf_raven1": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@jacinta_wolf_raven1"
+    },
+    "sources": [
+      "https://youtube.com/@jacinta_wolf_raven1"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "jillobird": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/jillobird/",
+      "youtube": "https://youtube.com/@jillobird"
+    },
+    "sources": [
+      "https://youtube.com/@jillobird",
+      "https://www.mixcloud.com/jillobird/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "jiltedhybrid": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@jiltedhybrid"
+    },
+    "sources": [
+      "https://youtube.com/@jiltedhybrid"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "l3ftfield": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/l3ftfield",
+      "youtube": "https://youtube.com/@l3ftfield"
+    },
+    "sources": [
+      "https://youtube.com/@l3ftfield",
+      "https://soundcloud.com/l3ftfield"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "lavelleofficial": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/lavelleofficial/",
+      "x": "https://x.com/lavelleofficial",
+      "youtube": "https://youtube.com/@lavelleofficial"
+    },
+    "sources": [
+      "https://x.com/lavelleofficial",
+      "https://youtube.com/@lavelleofficial",
+      "https://www.mixcloud.com/lavelleofficial/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "liaisonmusic": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@liaisonmusic"
+    },
+    "sources": [
+      "https://youtube.com/@liaisonmusic"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "lincolnhaukdj": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/lincolnhaukdj/",
+      "youtube": "https://youtube.com/@lincolnhaukdj"
+    },
+    "sources": [
+      "https://youtube.com/@lincolnhaukdj",
+      "https://www.mixcloud.com/lincolnhaukdj/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "liquid_bongo": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/liquid_bongo/"
+    },
+    "sources": [
+      "https://www.mixcloud.com/liquid_bongo/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "mad_rabbits": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/mad_rabbits/",
+      "x": "https://x.com/mad_rabbits",
+      "youtube": "https://youtube.com/@mad_rabbits"
+    },
+    "sources": [
+      "https://x.com/mad_rabbits",
+      "https://youtube.com/@mad_rabbits",
+      "https://www.mixcloud.com/mad_rabbits/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "mark_loves_coffee_": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@mark_loves_coffee_"
+    },
+    "sources": [
+      "https://youtube.com/@mark_loves_coffee_"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "markinsutton": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/markinsutton/",
+      "x": "https://x.com/markinsutton",
+      "youtube": "https://youtube.com/@markinsutton"
+    },
+    "sources": [
+      "https://x.com/markinsutton",
+      "https://youtube.com/@markinsutton",
+      "https://www.mixcloud.com/markinsutton/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "mixlmusic": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/mixlmusic",
+      "x": "https://x.com/mixlmusic",
+      "youtube": "https://youtube.com/@mixlmusic"
+    },
+    "sources": [
+      "https://x.com/mixlmusic",
+      "https://youtube.com/@mixlmusic",
+      "https://soundcloud.com/mixlmusic"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "music4thamasses": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/music4thamasses",
+      "youtube": "https://youtube.com/@music4thamasses"
+    },
+    "sources": [
+      "https://youtube.com/@music4thamasses",
+      "https://soundcloud.com/music4thamasses"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "mystixa": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/mystixa/",
+      "soundcloud": "https://soundcloud.com/mystixa",
+      "x": "https://x.com/mystixa",
+      "youtube": "https://youtube.com/@mystixa"
+    },
+    "sources": [
+      "https://x.com/mystixa",
+      "https://youtube.com/@mystixa",
+      "https://soundcloud.com/mystixa",
+      "https://www.mixcloud.com/mystixa/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "nickarkell": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/nickarkell",
+      "youtube": "https://youtube.com/@nickarkell"
+    },
+    "sources": [
+      "https://x.com/nickarkell",
+      "https://youtube.com/@nickarkell"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "omega11xx": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/omega11xx/",
+      "soundcloud": "https://soundcloud.com/omega11xx",
+      "youtube": "https://youtube.com/@omega11xx"
+    },
+    "sources": [
+      "https://youtube.com/@omega11xx",
+      "https://soundcloud.com/omega11xx",
+      "https://www.mixcloud.com/omega11xx/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "onlythedetails": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/onlythedetails/",
+      "youtube": "https://youtube.com/@onlythedetails"
+    },
+    "sources": [
+      "https://youtube.com/@onlythedetails",
+      "https://www.mixcloud.com/onlythedetails/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "poddersdj": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/poddersdj",
+      "x": "https://x.com/poddersdj",
+      "youtube": "https://youtube.com/@poddersdj"
+    },
+    "sources": [
+      "https://x.com/poddersdj",
+      "https://youtube.com/@poddersdj",
+      "https://soundcloud.com/poddersdj"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "puppobandit": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/puppobandit/",
+      "soundcloud": "https://soundcloud.com/puppobandit",
+      "x": "https://x.com/puppobandit",
+      "youtube": "https://youtube.com/@puppobandit"
+    },
+    "sources": [
+      "https://x.com/puppobandit",
+      "https://youtube.com/@puppobandit",
+      "https://soundcloud.com/puppobandit",
+      "https://www.mixcloud.com/puppobandit/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "richgreen": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/richgreen/",
+      "soundcloud": "https://soundcloud.com/richgreen",
+      "youtube": "https://youtube.com/@richgreen"
+    },
+    "sources": [
+      "https://youtube.com/@richgreen",
+      "https://soundcloud.com/richgreen",
+      "https://www.mixcloud.com/richgreen/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "rpm_dj": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/rpm_dj",
+      "youtube": "https://youtube.com/@rpm_dj"
+    },
+    "sources": [
+      "https://x.com/rpm_dj",
+      "https://youtube.com/@rpm_dj"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "shaneboehm": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/shaneboehm",
+      "youtube": "https://youtube.com/@shaneboehm"
+    },
+    "sources": [
+      "https://x.com/shaneboehm",
+      "https://youtube.com/@shaneboehm"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "sprinxxx_": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/sprinxxx_"
+    },
+    "sources": [
+      "https://x.com/sprinxxx_"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "streetflicker": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "soundcloud": "https://soundcloud.com/streetflicker",
+      "x": "https://x.com/streetflicker",
+      "youtube": "https://youtube.com/@streetflicker"
+    },
+    "sources": [
+      "https://x.com/streetflicker",
+      "https://youtube.com/@streetflicker",
+      "https://soundcloud.com/streetflicker"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "teknokat222": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@teknokat222"
+    },
+    "sources": [
+      "https://youtube.com/@teknokat222"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
   "thedjbigd": {
     "foundAt": "2026-11-24",
-    "verifiedAgainst": "Twitch Helix /users?login=thedjbigd (display name TheDJBigD, partner, bio: Darren, 53, vinyl + digital house/progressive, Essex England)",
+    "notes": "X, YouTube, SoundCloud and Mixcloud all match the Twitch identity (Darren, Essex, house/progressive). No Instagram found in any search - the handle appears unused. The website on file (thedjbigd.uk) is a parked one.com page, not a real site. No TikTok at this handle.",
     "socials": {
-      "x": "https://x.com/TheDJBigD",
-      "youtube": "https://www.youtube.com/@thedjbigd",
+      "mixcloud": "https://www.mixcloud.com/thedjbigd/",
       "soundcloud": "https://soundcloud.com/thedjbigd",
-      "mixcloud": "https://www.mixcloud.com/thedjbigd/"
+      "x": "https://x.com/TheDJBigD",
+      "youtube": "https://www.youtube.com/@thedjbigd"
     },
     "sources": [
       "https://x.com/TheDJBigD",
@@ -14,6 +722,45 @@
       "https://soundcloud.com/thedjbigd",
       "https://www.mixcloud.com/thedjbigd/"
     ],
-    "notes": "X, YouTube, SoundCloud and Mixcloud all match the Twitch identity (Darren, Essex, house/progressive). No Instagram found in any search - the handle appears unused. The website on file (thedjbigd.uk) is a parked one.com page, not a real site. No TikTok at this handle."
+    "verifiedAgainst": "Twitch Helix /users?login=thedjbigd (display name TheDJBigD, partner, bio: Darren, 53, vinyl + digital house/progressive, Essex England)"
+  },
+  "trancejesus": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "x": "https://x.com/trancejesus",
+      "youtube": "https://youtube.com/@trancejesus"
+    },
+    "sources": [
+      "https://x.com/trancejesus",
+      "https://youtube.com/@trancejesus"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "unrealdjofficial": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "youtube": "https://youtube.com/@unrealdjofficial"
+    },
+    "sources": [
+      "https://youtube.com/@unrealdjofficial"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
+  },
+  "viciouscode": {
+    "foundAt": "2026-11-24",
+    "notes": "Matched by handle on the platform (the archive folder name is the DJ's Twitch login). Confirm it is really this DJ before approving.",
+    "socials": {
+      "mixcloud": "https://www.mixcloud.com/viciouscode/",
+      "x": "https://x.com/viciouscode",
+      "youtube": "https://youtube.com/@viciouscode"
+    },
+    "sources": [
+      "https://x.com/viciouscode",
+      "https://youtube.com/@viciouscode",
+      "https://www.mixcloud.com/viciouscode/"
+    ],
+    "verifiedAgainst": "handle exists on the platform and the page identifies itself as that handle"
   }
 }
