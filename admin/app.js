@@ -213,6 +213,24 @@ function setNote(text, kind) {
  * displays the characters that fit, so this is the only way to read a long link
  * without scrolling inside the box.
  */
+
+/** Tag the fields whose value came from a suggestion rather than a saved link. */
+function markSuggestedFields(suggestion) {
+  const suggested = (suggestion && suggestion.socials) || {};
+  for (const label of els.djForm.querySelectorAll(".field")) {
+    const input = label.querySelector("[data-social]");
+    const head = label.querySelector(".field-head");
+    if (!input || !head) continue;
+    head.querySelector(".field-tag")?.remove();
+    if (suggested[input.dataset.social]) {
+      const tag = document.createElement("span");
+      tag.className = "field-tag";
+      tag.textContent = "suggested";
+      head.appendChild(tag);
+    }
+  }
+}
+
 function renderFieldLinks() {
   const pairs = [];
   if (els.djTwitch && els.djTwitchLink) pairs.push([els.djTwitch, els.djTwitchLink]);
@@ -290,10 +308,12 @@ function openEditor(id) {
   if (els.djTwitch) els.djTwitch.value = `https://www.twitch.tv/${row.id}`;
 
   const suggestion = row.suggestion || null;
-  const values = suggestion ? suggestion.socials : row.socials || {};
+  // Stored links always win; the suggestion only fills the keys that have no value yet.
+  const values = { ...(row.socials || {}), ...((suggestion && suggestion.socials) || {}) };
   for (const input of els.djForm.querySelectorAll("[data-social]")) {
     input.value = values[input.dataset.social] || "";
   }
+  markSuggestedFields(suggestion);
   renderSuggestions(suggestion);
   renderFieldLinks();
   setNote("", null);

@@ -142,7 +142,9 @@ const four = { thedjbigd: { socials: {
   mixcloud: "https://www.mixcloud.com/thedjbigd/",
 } } };
 assertEqual(Object.keys(suggestionFor("thedjbigd", {}, four, {}).socials).sort(), ["mixcloud", "soundcloud", "x", "youtube"], "keeps soundcloud and mixcloud as storable keys");
-assertEqual(suggestionFor("thedjbigd", { website: "https://x.test" }, sugg, {}), null, "hides the suggestion once links are stored");
+const gaps = suggestionFor("thedjbigd", { website: "https://x.test" }, sugg, {});
+assertEqual(gaps && gaps.socials, { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, "a stored link only removes that one key from the suggestion");
+assertEqual(suggestionFor("thedjbigd", { x: "https://x.com/TheDJBigD", youtube: "https://www.youtube.com/@thedjbigd" }, sugg, {}), null, "no suggestion left once every suggested key is stored");
 assertEqual(suggestionFor("thedjbigd", {}, sugg, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }), null, "a declined suggestion stays hidden");
 assert(suggestionFor("thedjbigd", {}, { thedjbigd: { ...sugg.thedjbigd, foundAt: "2026-11-30" } }, { thedjbigd: { declinedAt: "2026-11-24T10:00:00Z" } }) !== null, "a newer suggestion resurfaces after a decline");
 assertEqual(suggestionFor("unknown", {}, sugg, {}), null, "no suggestion for other DJs");

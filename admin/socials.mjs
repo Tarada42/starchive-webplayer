@@ -199,13 +199,18 @@ export function suggestionFor(dj, storedSocials, suggestions, declined) {
     const foundDay = String(entry.foundAt || "").slice(0, 10);
     if (!foundDay || !declinedDay || foundDay <= declinedDay) return null;
   }
+  // A DJ can have some links stored and still be missing others: the suggestion fills
+  // the gaps rather than being suppressed by a single existing link.
   const socials = sanitizeSocials(entry.socials);
   if (Object.keys(socials).length === 0) return null;
   const stored = storedSocials && typeof storedSocials === "object" ? storedSocials : {};
-  const hasStored = Object.keys(stored).length > 0;
-  if (hasStored) return null;
+  const gaps = {};
+  for (const [key, value] of Object.entries(socials)) {
+    if (!stored[key]) gaps[key] = value;
+  }
+  if (Object.keys(gaps).length === 0) return null;
   return {
-    socials,
+    socials: gaps,
     notes: typeof entry.notes === "string" ? entry.notes : "",
     sources: Array.isArray(entry.sources) ? entry.sources.filter((s) => typeof s === "string") : [],
     foundAt: typeof entry.foundAt === "string" ? entry.foundAt : "",
