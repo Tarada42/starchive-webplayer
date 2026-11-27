@@ -43,9 +43,52 @@ app.get("/genres.json", (_req, res) => {
   }
 });
 
+// Security headers for the public app. The CSP is Report-Only on purpose: the
+// pages use inline script/style and the Live view embeds an iframe, so the
+// policy is observed (violations logged to the browser console / a report
+// endpoint later) before it is ever enforced. Nothing here blocks rendering.
+const PUBLIC_CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob: https:",
+  "connect-src 'self' https:",
+  "frame-src 'self' https:",
+  "font-src 'self' data:",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("Content-Security-Policy-Report-Only", PUBLIC_CSP_REPORT_ONLY);
+  next();
+});
+
 // Static files
-// The admin app lives in admin/ and must ONLY be served by the separate admin
-// listener (ADMIN_PORT). Block it on the public port before the static handler.
+// Only the public app is served. The admin app (separate listener) and the
+// server's own runtime/state must never be reachable here: express.static
+// publishes whatever sits in this directory, so anything private is refused
+// before it runs. The SPA fallback below would otherwise answer with HTML.
+const PRIVATE_DIRS = ["/data", "/node_modules", "/admin", "/docs", "/.git", "/.vercel", "/.github"];
+// Paths are lower-cased before the check, so these keys must be lower-case too.
+const PRIVATE_FILES = new Set([
+  "/package.json",
+  "/package-lock.json",
+  "/docker-compose.yml",
+  "/dockerfile",
+  "/.gitignore",
+  "/server.mjs",
+  "/.env",
+  "/.env.example",
+  "/.dockerignore",
+]);
 app.use((req, res, next) => {
   let p = req.path;
   try {
@@ -55,7 +98,14 @@ app.use((req, res, next) => {
   }
   p = p.replace(/\\/g, "/").replace(/\/{2,}/g, "/").toLowerCase();
   const isAdminUi = p === "/admin" || p.startsWith("/admin/") || /^\/assets\/admin\.(js|css)$/.test(p);
-  if (isAdminUi) return res.status(404).type("text/plain").send("Not found");
+  const isPrivateDir = PRIVATE_DIRS.some((d) => p === d || p.startsWith(d + "/"));
+  const isPrivateFile = PRIVATE_FILES.has(p);
+  // /api/<name> is a route; /api/<name>.js is the handler's source.
+  const isApiSource = /^\/api\/[^/]+\.(js|mjs)$/.test(p);
+  const isNonAssetMap = p.endsWith(".map") && !p.startsWith("/assets/");
+  if (isAdminUi || isPrivateDir || isPrivateFile || isApiSource || isNonAssetMap) {
+    return res.status(404).type("text/plain").send("Not found");
+  }
   next();
 });
 
@@ -91,9 +141,44 @@ app.get("/stream/:dj.m3u", (req, res) => {
   res.end(href + "\n");
 });
 
+// Concurrency guard for the relay. Each open stream costs an upstream
+// connection and a permanent pipe, so an unauthenticated endpoint with no
+// ceiling is a bandwidth faucet. Limits are intentionally loose: they only
+// bite when something is opening far more streams than listeners could.
+const MAX_CONCURRENT_STREAMS = Number(process.env.MAX_CONCURRENT_STREAMS || 120);
+const MAX_STREAMS_PER_IP = Number(process.env.MAX_STREAMS_PER_IP || 8);
+let activeStreams = 0;
+const streamsByIp = new Map();
+
 app.get("/stream/:dj", async (req, res) => {
   const dj = String(req.params.dj || "").replace(/[^A-Za-z0-9_]/g, "");
   if (!dj) return res.status(400).send("missing dj");
+
+  const ip = req.headers["cf-connecting-ip"] || req.socket?.remoteAddress || "unknown";
+  if (activeStreams >= MAX_CONCURRENT_STREAMS) {
+    res.setHeader("Retry-After", "30");
+    return res.status(503).send("too many listeners right now");
+  }
+  const ipOpen = streamsByIp.get(ip) || 0;
+  if (ipOpen >= MAX_STREAMS_PER_IP) {
+    res.setHeader("Retry-After", "30");
+    return res.status(429).send("too many streams from this connection");
+  }
+  activeStreams += 1;
+  streamsByIp.set(ip, ipOpen + 1);
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    activeStreams = Math.max(0, activeStreams - 1);
+    const left = (streamsByIp.get(ip) || 1) - 1;
+    if (left <= 0) streamsByIp.delete(ip);
+    else streamsByIp.set(ip, left);
+  };
+  res.on("close", release);
+  res.on("finish", release);
+  req.on("close", release);
+
   const up = `https://live.streambox.space/${dj}_hq`;
   let upstream;
   let ctrl;
